@@ -1,6 +1,162 @@
 {
-  "last_updated": "2026-10-06 02:26 기준",
-  "total_etfs_tracked": 0,
-  "tracked_etfs": [],
-  "stocks": []
+  "last_updated": "2026-10-06 02:28 기준",
+  "total_etfs_tracked": 3,
+  "tracked_etfs": [
+    "TIME 미국나스닥100액티브",
+    "TIME 글로벌휴머노이드로봇산업액티브",
+    "TIME 코리아밸류업액티브"
+  ],
+  "stocks": [
+    {
+      "name": "NVIDIA Corp",
+      "etfs": [
+        "TIME 미국나스닥100액티브",
+        "TIME 글로벌휴머노이드로봇산업액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "9.80%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (2개 펀드)",
+      "actionGuide": "강력 매수 (30%)",
+      "guideColor": "emerald",
+      "priority_score": 90,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 9.80%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[NVIDIA Corp] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 2개 펀드 동시 편입\n• 보유비중 9.80%"
+    },
+    {
+      "name": "SK하이닉스",
+      "etfs": [
+        "TIME 코리아밸류업액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "20.93%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 실제 편입 비중 20.93%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[SK하이닉스] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 보유비중 20.93%"
+    },
+    {
+      "name": "Micron Technology",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "5.20%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 5.20%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[Micron Technology] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 보유비중 5.20%"
+    },
+    {
+      "name": "Bloom Energy (BE)",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "4.60%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 4.60%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[Bloom Energy (BE)] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 보유비중 4.60%"
+    },
+    {
+      "name": "두산에너빌리티",
+      "etfs": [
+        "TIME 코리아밸류업액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "4.10%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 실제 편입 비중 4.10%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[두산에너빌리티] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 보유비중 4.10%"
+    },
+    {
+      "name": "레인보우로보틱스",
+      "etfs": [
+        "TIME 글로벌휴머노이드로봇산업액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "6.92%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "2026-10-06",
+      "strategy": "normal",
+      "strategyLabel": "정규 운용",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 10,
+      "reason": "타임폴리오 TIME 글로벌휴머노이드로봇산업액티브 실제 편입 비중 6.92%. 포지션 정상 추적 중.",
+      "news": [
+        {
+          "title": "[레인보우로보틱스] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-06"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 보유비중 6.92%"
+    }
+  ]
 }
