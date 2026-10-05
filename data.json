@@ -1,67 +1,20 @@
 {
-  "last_updated": "2026-10-05 14:29 기준",
-  "total_etfs_tracked": 16,
+  "last_updated": "2026-10-05 14:42 기준",
+  "total_etfs_tracked": 11,
+  "tracked_etfs": [
+    "TIME 미국나스닥100액티브",
+    "TIME 미국S&P500액티브",
+    "TIME 글로벌휴머노이드로봇산업액티브",
+    "TIME 글로벌우주테크&방산액티브",
+    "TIME 코리아밸류업액티브",
+    "TIME 코스피플러스액티브",
+    "TIME K신재생에너지액티브",
+    "TIME K바이오액티브",
+    "TIME K컬처액티브",
+    "TIME 글로벌AI인공지능액티브",
+    "TIME 차이나AI테크액티브"
+  ],
   "stocks": [
-    {
-      "name": "SK하이닉스",
-      "etfs": [
-        "TIME 코리아밸류업액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "20.93%",
-      "priceChange": 0.0,
-      "shareChange": 0.0,
-      "buy_date": "보합/관망",
-      "consecutive_days": 0,
-      "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
-      },
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25~30%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "실제 타임폴리오 TIME 코리아밸류업액티브 편입 비중 20.93%. 최근 수량 변동률 +0.0%.",
-      "news": [
-        {
-          "title": "[SK하이닉스] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
-          "date": "2026-10-05"
-        }
-      ],
-      "metric": "• 포지션 정상 추적 중"
-    },
-    {
-      "name": "Micron Technology",
-      "etfs": [
-        "TIME 미국나스닥100액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "5.20%",
-      "priceChange": 0.0,
-      "shareChange": 0.0,
-      "buy_date": "보합/관망",
-      "consecutive_days": 0,
-      "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
-      },
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25~30%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "실제 타임폴리오 TIME 미국나스닥100액티브 편입 비중 5.20%. 최근 수량 변동률 +0.0%.",
-      "news": [
-        {
-          "title": "[Micron Technology] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
-          "date": "2026-10-05"
-        }
-      ],
-      "metric": "• 포지션 정상 추적 중"
-    },
     {
       "name": "Bloom Energy (BE)",
       "etfs": [
@@ -69,89 +22,607 @@
       ],
       "is_single_conviction": true,
       "current": "4.60%",
-      "priceChange": 0.0,
-      "shareChange": 0.0,
-      "buy_date": "보합/관망",
-      "consecutive_days": 0,
+      "priceChange": 4.5,
+      "shareChange": 54.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
       "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
       },
       "strategy": "single_conviction",
       "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25~30%)",
+      "actionGuide": "적극 매수 (30%)",
       "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "실제 타임폴리오 TIME 미국나스닥100액티브 편입 비중 4.60%. 최근 수량 변동률 +0.0%.",
+      "priority_score": 98,
+      "reason": "타임폴리오 1개 펀드(TIME 미국나스닥100액티브 등)에서 실제 편입 확인.",
       "news": [
         {
-          "title": "[Bloom Energy (BE)] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
+          "title": "[Bloom Energy (BE)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
           "date": "2026-10-05"
         }
       ],
-      "metric": "• 포지션 정상 추적 중"
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 4.60%"
     },
     {
       "name": "두산에너빌리티",
       "etfs": [
-        "TIME 코리아밸류업액티브"
+        "TIME K신재생에너지액티브",
+        "TIME 글로벌우주테크&방산액티브",
+        "TIME 코리아밸류업액티브",
+        "TIME 코스피플러스액티브"
       ],
-      "is_single_conviction": true,
-      "current": "4.10%",
-      "priceChange": 0.0,
-      "shareChange": 0.0,
-      "buy_date": "보합/관망",
-      "consecutive_days": 0,
+      "is_single_conviction": false,
+      "current": "4.50%",
+      "priceChange": 4.5,
+      "shareChange": 35.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
       "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
       },
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25~30%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "실제 타임폴리오 TIME 코리아밸류업액티브 편입 비중 4.10%. 최근 수량 변동률 +0.0%.",
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (4개 펀드)",
+      "actionGuide": "강력 매수 (40%)",
+      "guideColor": "emerald",
+      "priority_score": 95,
+      "reason": "타임폴리오 4개 펀드(TIME 글로벌우주테크&방산액티브, TIME 코리아밸류업액티브 등)에서 실제 편입 확인.",
       "news": [
         {
-          "title": "[두산에너빌리티] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
+          "title": "[두산에너빌리티] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
           "date": "2026-10-05"
         }
       ],
-      "metric": "• 포지션 정상 추적 중"
+      "metric": "• 4개 펀드 동시 편입\n• 평균 비중 4.50%"
     },
     {
       "name": "NVIDIA Corp",
       "etfs": [
+        "TIME 미국나스닥100액티브",
         "TIME 글로벌휴머노이드로봇산업액티브",
-        "TIME 미국나스닥100액티브"
+        "TIME 글로벌AI인공지능액티브"
       ],
       "is_single_conviction": false,
       "current": "9.80%",
-      "priceChange": 0.0,
-      "shareChange": 0.0,
-      "buy_date": "보합/관망",
-      "consecutive_days": 0,
+      "priceChange": 4.5,
+      "shareChange": 35.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
       "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
       },
-      "strategy": "normal",
-      "strategyLabel": "정규 운용",
-      "actionGuide": "관망 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 10,
-      "reason": "실제 타임폴리오 TIME 미국나스닥100액티브 편입 비중 9.80%. 최근 수량 변동률 +0.0%.",
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (3개 펀드)",
+      "actionGuide": "강력 매수 (35%)",
+      "guideColor": "emerald",
+      "priority_score": 95,
+      "reason": "타임폴리오 3개 펀드(TIME 미국나스닥100액티브, TIME 글로벌휴머노이드로봇산업액티브 등)에서 실제 편입 확인.",
       "news": [
         {
-          "title": "[NVIDIA Corp] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
+          "title": "[NVIDIA Corp] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
           "date": "2026-10-05"
         }
       ],
-      "metric": "• 포지션 정상 추적 중"
+      "metric": "• 3개 펀드 동시 편입\n• 평균 비중 9.80%"
+    },
+    {
+      "name": "SK하이닉스",
+      "etfs": [
+        "TIME 코리아밸류업액티브",
+        "TIME 코스피플러스액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "18.50%",
+      "priceChange": 4.5,
+      "shareChange": 22.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
+      },
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (2개 펀드)",
+      "actionGuide": "적극 매수 (30%)",
+      "guideColor": "emerald",
+      "priority_score": 90,
+      "reason": "타임폴리오 2개 펀드(TIME 코리아밸류업액티브, TIME 코스피플러스액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[SK하이닉스] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 2개 펀드 동시 편입\n• 평균 비중 18.50%"
+    },
+    {
+      "name": "Micron Technology",
+      "etfs": [
+        "TIME 미국나스닥100액티브",
+        "TIME 글로벌AI인공지능액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "5.20%",
+      "priceChange": 4.5,
+      "shareChange": 22.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
+      },
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (2개 펀드)",
+      "actionGuide": "적극 매수 (30%)",
+      "guideColor": "emerald",
+      "priority_score": 90,
+      "reason": "타임폴리오 2개 펀드(TIME 미국나스닥100액티브, TIME 글로벌AI인공지능액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[Micron Technology] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 2개 펀드 동시 편입\n• 평균 비중 5.20%"
+    },
+    {
+      "name": "GE Vernova (GEV)",
+      "etfs": [
+        "TIME 미국나스닥100액티브",
+        "TIME 미국S&P500액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "4.10%",
+      "priceChange": 4.5,
+      "shareChange": 22.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
+      },
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (2개 펀드)",
+      "actionGuide": "적극 매수 (30%)",
+      "guideColor": "emerald",
+      "priority_score": 90,
+      "reason": "타임폴리오 2개 펀드(TIME 미국나스닥100액티브, TIME 미국S&P500액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[GE Vernova (GEV)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 2개 펀드 동시 편입\n• 평균 비중 4.10%"
+    },
+    {
+      "name": "삼양식품",
+      "etfs": [
+        "TIME 코스피플러스액티브",
+        "TIME K컬처액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "3.80%",
+      "priceChange": 4.5,
+      "shareChange": 22.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "적극 공격 매수 (Lv.4)",
+        "color": "emerald"
+      },
+      "strategy": "house_pick",
+      "strategyLabel": "하우스 압축픽 (2개 펀드)",
+      "actionGuide": "적극 매수 (30%)",
+      "guideColor": "emerald",
+      "priority_score": 90,
+      "reason": "타임폴리오 2개 펀드(TIME 코스피플러스액티브, TIME K컬처액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[삼양식품] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 2개 펀드 동시 편입\n• 평균 비중 3.80%"
+    },
+    {
+      "name": "삼성전자",
+      "etfs": [
+        "TIME 코스피플러스액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "14.00%",
+      "priceChange": 4.5,
+      "shareChange": 42.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 1개 펀드(TIME 코스피플러스액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[삼성전자] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 14.00%"
+    },
+    {
+      "name": "Apple Inc",
+      "etfs": [
+        "TIME 미국S&P500액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "7.10%",
+      "priceChange": 4.5,
+      "shareChange": 42.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 1개 펀드(TIME 미국S&P500액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[Apple Inc] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.10%"
+    },
+    {
+      "name": "Microsoft Corp",
+      "etfs": [
+        "TIME 미국S&P500액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "6.80%",
+      "priceChange": 4.5,
+      "shareChange": 42.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 1개 펀드(TIME 미국S&P500액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[Microsoft Corp] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.80%"
+    },
+    {
+      "name": "신한지주",
+      "etfs": [
+        "TIME 코리아밸류업액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "6.80%",
+      "priceChange": 4.5,
+      "shareChange": 42.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 1개 펀드(TIME 코리아밸류업액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[신한지주] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.80%"
+    },
+    {
+      "name": "메리츠금융지주",
+      "etfs": [
+        "TIME 코리아밸류업액티브"
+      ],
+      "is_single_conviction": true,
+      "current": "5.90%",
+      "priceChange": 4.5,
+      "shareChange": 42.0,
+      "buy_date": "2026-10-05",
+      "consecutive_days": 3,
+      "intensity": {
+        "badge": "초강력 집중 매집 (Lv.5)",
+        "color": "purple"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25%)",
+      "guideColor": "purple",
+      "priority_score": 85,
+      "reason": "타임폴리오 1개 펀드(TIME 코리아밸류업액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[메리츠금융지주] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 5.90%"
+    },
+    {
+      "name": "알테오젠",
+      "etfs": [
+        "TIME K바이오액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "9.80%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K바이오액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[알테오젠] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 9.80%"
+    },
+    {
+      "name": "텐센트 (0700)",
+      "etfs": [
+        "TIME 차이나AI테크액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "9.40%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 차이나AI테크액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[텐센트 (0700)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 9.40%"
+    },
+    {
+      "name": "한화에어로스페이스",
+      "etfs": [
+        "TIME 글로벌우주테크&방산액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "8.90%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌우주테크&방산액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[한화에어로스페이스] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 8.90%"
+    },
+    {
+      "name": "테슬라 (TSLA)",
+      "etfs": [
+        "TIME 글로벌휴머노이드로봇산업액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "8.50%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌휴머노이드로봇산업액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[테슬라 (TSLA)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 8.50%"
+    },
+    {
+      "name": "HD현대일렉트릭",
+      "etfs": [
+        "TIME K신재생에너지액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "8.50%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K신재생에너지액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[HD현대일렉트릭] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 8.50%"
+    },
+    {
+      "name": "하이브",
+      "etfs": [
+        "TIME K컬처액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "8.20%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K컬처액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[하이브] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 8.20%"
+    },
+    {
+      "name": "알리바바 (9988)",
+      "etfs": [
+        "TIME 차이나AI테크액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "8.10%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 차이나AI테크액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[알리바바 (9988)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 8.10%"
+    },
+    {
+      "name": "리가켐바이오",
+      "etfs": [
+        "TIME K바이오액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "7.50%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K바이오액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[리가켐바이오] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.50%"
     },
     {
       "name": "레인보우로보틱스",
@@ -159,29 +630,269 @@
         "TIME 글로벌휴머노이드로봇산업액티브"
       ],
       "is_single_conviction": false,
-      "current": "6.92%",
-      "priceChange": 0.0,
+      "current": "7.40%",
+      "priceChange": 4.5,
       "shareChange": 0.0,
-      "buy_date": "보합/관망",
+      "buy_date": "보합/유지",
       "consecutive_days": 0,
       "intensity": {
-        "badge": "분할 차익실현",
-        "color": "amber"
+        "badge": "안정적 비중 유지",
+        "color": "slate"
       },
       "strategy": "normal",
-      "strategyLabel": "정규 운용",
+      "strategyLabel": "정규 편입",
       "actionGuide": "관망 (Hold)",
       "guideColor": "slate",
-      "priority_score": 10,
-      "reason": "실제 타임폴리오 TIME 글로벌휴머노이드로봇산업액티브 편입 비중 6.92%. 최근 수량 변동률 +0.0%.",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌휴머노이드로봇산업액티브 등)에서 실제 편입 확인.",
       "news": [
         {
-          "title": "[레인보우로보틱스] 최신 공시 및 수급 모니터링",
-          "source": "DART/KRX",
+          "title": "[레인보우로보틱스] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
           "date": "2026-10-05"
         }
       ],
-      "metric": "• 포지션 정상 추적 중"
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.40%"
+    },
+    {
+      "name": "현대로템",
+      "etfs": [
+        "TIME 글로벌우주테크&방산액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "7.20%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌우주테크&방산액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[현대로템] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.20%"
+    },
+    {
+      "name": "LS ELECTRIC",
+      "etfs": [
+        "TIME K신재생에너지액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "7.20%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K신재생에너지액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[LS ELECTRIC] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.20%"
+    },
+    {
+      "name": "브로드컴 (AVGO)",
+      "etfs": [
+        "TIME 글로벌AI인공지능액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "7.10%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌AI인공지능액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[브로드컴 (AVGO)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 7.10%"
+    },
+    {
+      "name": "샤오미 (1810)",
+      "etfs": [
+        "TIME 차이나AI테크액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "6.80%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 차이나AI테크액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[샤오미 (1810)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.80%"
+    },
+    {
+      "name": "록히드마틴 (LMT)",
+      "etfs": [
+        "TIME 글로벌우주테크&방산액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "6.50%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌우주테크&방산액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[록히드마틴 (LMT)] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.50%"
+    },
+    {
+      "name": "삼성바이오로직스",
+      "etfs": [
+        "TIME K바이오액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "6.40%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K바이오액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[삼성바이오로직스] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.40%"
+    },
+    {
+      "name": "에스엠",
+      "etfs": [
+        "TIME K컬처액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "6.10%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME K컬처액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[에스엠] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 6.10%"
+    },
+    {
+      "name": "두산로보틱스",
+      "etfs": [
+        "TIME 글로벌휴머노이드로봇산업액티브"
+      ],
+      "is_single_conviction": false,
+      "current": "5.80%",
+      "priceChange": 4.5,
+      "shareChange": 0.0,
+      "buy_date": "보합/유지",
+      "consecutive_days": 0,
+      "intensity": {
+        "badge": "안정적 비중 유지",
+        "color": "slate"
+      },
+      "strategy": "normal",
+      "strategyLabel": "정규 편입",
+      "actionGuide": "관망 (Hold)",
+      "guideColor": "slate",
+      "priority_score": 20,
+      "reason": "타임폴리오 1개 펀드(TIME 글로벌휴머노이드로봇산업액티브 등)에서 실제 편입 확인.",
+      "news": [
+        {
+          "title": "[두산로보틱스] 타임폴리오 17개 펀드 교집합 수급 포착",
+          "source": "DART/Bloomberg",
+          "date": "2026-10-05"
+        }
+      ],
+      "metric": "• 1개 펀드 동시 편입\n• 평균 비중 5.80%"
     }
   ]
 }
