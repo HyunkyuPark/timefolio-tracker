@@ -27,72 +27,62 @@ ETF_REGISTRY = {
 SESSION = requests.Session()
 SESSION.headers.update({
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Referer": "https://finance.naver.com/",
-    "Accept": "*/*"
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Referer": "https://www.timefolio.co.kr/"
 })
 
 def fetch_etf_holdings(code):
     items = {}
 
-    # 엔드포인트 1: 네이버 통합 종목 API
+    # 1. 타임폴리오 공식 홈페이지 PDF 조회 엔드포인트
     try:
-        url = f"https://m.stock.naver.com/api/stock/{code}/integration"
-        res = SESSION.get(url, timeout=4)
+        url = "https://www.timefolio.co.kr/etf/ajax_pdf_list.php"
+        data = {"fund_cd": code}
+        res = SESSION.post(url, data=data, timeout=6)
         if res.status_code == 200:
-            data = res.json()
-            # integration 응답 구조 내 etfPortfolio 탐색
-            p_list = data.get("etfPortfolio", [])
-            for r in p_list:
-                nm = r.get("itemName") or r.get("stockName") or ""
-                wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("share") or r.get("quantity") or 0.0)
-                pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and "현금" not in nm and "예금" not in nm and wt > 0.05:
+            res_json = res.json()
+            raw_list = res_json.get("list", []) or res_json.get("data", [])
+            for r in raw_list:
+                nm = (r.get("stk_nm") or r.get("item_name") or r.get("name") or "").strip()
+                if not nm or "원화" in nm or "현금" in nm or "예금" in nm:
+                    continue
+                try:
+                    wt = float(str(r.get("weight", 0)).replace("%", "").replace(",", ""))
+                except Exception:
+                    wt = 0.0
+                try:
+                    sh = float(str(r.get("qty", 0) or r.get("quantity", 0)).replace(",", ""))
+                except Exception:
+                    sh = 0.0
+                try:
+                    pr = float(str(r.get("price", 0) or r.get("eval_amt", 0)).replace(",", ""))
+                except Exception:
+                    pr = 0.0
+
+                if wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
             if items:
                 return items
     except Exception as e:
-        pass
+        print(f"[{code}] 타임폴리오 직통 수집 시도 중: {e}")
 
-    # 엔드포인트 2: 네이버 모바일 stock portfolio
+    # 2. KRX 백업 엔드포인트
     try:
-        url = f"https://m.stock.naver.com/api/stock/{code}/etf/portfolio"
-        res = SESSION.get(url, timeout=4)
+        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
+        h = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", "Referer": "https://m.stock.naver.com/"}
+        res = SESSION.get(url, headers=h, timeout=4)
         if res.status_code == 200:
-            data = res.json()
-            p_list = data.get("portfolio", []) if isinstance(data, dict) else []
-            for r in p_list:
-                nm = r.get("itemName") or r.get("stockName") or ""
-                wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("share") or r.get("quantity") or 0.0)
-                pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
-            if items:
-                return items
-    except Exception as e:
-        pass
-
-    # 엔드포인트 3: 다음 증권 포털 API
-    try:
-        url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
-        d_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Referer": "https://finance.daum.net/"
-        }
-        res = SESSION.get(url, headers=d_headers, timeout=4)
-        if res.status_code == 200:
-            data = res.json().get("data", [])
+            data = res.json().get("result", {}).get("portfolio", [])
             for r in data:
-                nm = r.get("name", "")
+                nm = (r.get("itemName") or r.get("stockName") or "").strip()
                 wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("volume") or 0.0)
+                sh = float(r.get("share") or r.get("quantity") or 0.0)
                 pr = float(r.get("price") or 0.0)
                 if nm and "원화" not in nm and wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
             if items:
                 return items
-    except Exception as e:
+    except Exception:
         pass
 
     return items
@@ -166,7 +156,7 @@ def main():
                     stock_to_etfs[s_name] = []
                 stock_to_etfs[s_name].append(meta["name"])
         else:
-            print(f"❌ [{meta['name']}] 수집 대기")
+            print(f"❌ [{meta['name']}] 수집 실패")
         
         time.sleep(0.3)
 
