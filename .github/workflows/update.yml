@@ -37,6 +37,8 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main || true
           git add data.json history.json || true
           git commit -m "Auto update ETF positions [skip ci]" || echo "No changes to commit"
-          git push
+          git push origin main
+
