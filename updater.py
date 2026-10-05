@@ -2,184 +2,170 @@ import json
 import os
 from datetime import datetime
 
-# 1. 전체 TIME 액티브 ETF 라인업 (채권/금리 파킹형 제외한 주식형 전체)
-ALL_TIME_ETFS = {
-    # 대표 지수/광의 알파 펀드 (가중치 High)
-    "433540": {"name": "TIME 미국나스닥100액티브", "type": "broad", "weight_tier": 1.5},
-    "385550": {"name": "TIME 코스피플러스액티브", "type": "broad", "weight_tier": 1.5},
-    "400580": {"name": "TIME 코스피액티브", "type": "broad", "weight_tier": 1.5},
-    "449170": {"name": "TIME 미국S&P500액티브", "type": "broad", "weight_tier": 1.5},
-    "KOSDAQ": {"name": "TIME 코스닥액티브", "type": "broad", "weight_tier": 1.3},
-    
-    # 글로벌/국내 테마 섹터 펀드 (크로스체크 시너지)
-    "432320": {"name": "TIME K컬처액티브", "type": "sector", "weight_tier": 1.0},
-    "465600": {"name": "TIME 글로벌인공지능액티브", "type": "sector", "weight_tier": 1.2},
-    "475380": {"name": "TIME 글로벌소부장액티브", "type": "sector", "weight_tier": 1.1},
-    "449180": {"name": "TIME 바이오액티브", "type": "sector", "weight_tier": 1.0},
-    "449190": {"name": "TIME K-이노베이션액티브", "type": "sector", "weight_tier": 1.0}
+# 1. TIME 액티브 ETF 분류 (지수형 vs 섹터/테마형 구분)
+ETF_REGISTRY = {
+    # 대표 지수형 액티브 (자유로운 알파 편입 가능 -> 가중치 최상)
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
+    "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
+    "400580": {"name": "TIME 코스피액티브", "is_broad": True},
+    "KOSDAQ": {"name": "TIME 코스닥액티브", "is_broad": True},
+    # 특정 섹터/테마 ETF (업종 의무 편입으로 단독 승부주 판별 시 제외)
+    "432320": {"name": "TIME K컬처액티브", "is_broad": False},
+    "465600": {"name": "TIME 글로벌인공지능액티브", "is_broad": False},
+    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
+    "449180": {"name": "TIME 바이오액티브", "is_broad": False}
 }
 
-# 2. 교집합 및 4대 전략 판별 엔진
-def classify_cross_strategy(stock_name, etf_appearances, avg_share_chg, avg_price_chg, is_new_entry=False):
-    """
-    etf_appearances: 해당 종목을 보유/매수 중인 TIME ETF 리스트
-    avg_share_chg: 전체 펀드 평균 보유수량 증감률(%)
-    avg_price_chg: 종목 최근 주가 등락률(%)
-    """
-    count = len(etf_appearances)
-    
-    # 전략 1: 하우스 압축픽 (서로 다른 펀드 2개 이상에서 동시 수량 확대)
-    if count >= 2 and avg_share_chg >= 8.0:
-        return {
+def evaluate_intensity(share_change, consecutive_days):
+    """매수 강도 및 레벨 판별 (1~5단계)"""
+    if share_change >= 40.0:
+        return {"level": 5, "badge": "초강력 집중 매집 (Lv.5)", "color": "purple"}
+    elif share_change >= 25.0:
+        return {"level": 4, "badge": "적극 공격 매수 (Lv.4)", "color": "emerald"}
+    elif share_change >= 12.0:
+        return {"level": 3, "badge": "계단식 분할 매수 (Lv.3)", "color": "blue"}
+    elif share_change >= 5.0:
+        return {"level": 2, "badge": "안정적 비중 확대 (Lv.2)", "color": "slate"}
+    elif share_change > 0.0:
+        return {"level": 1, "badge": "정찰병 진입 (Lv.1)", "color": "slate"}
+    elif share_change <= -15.0:
+        return {"level": 0, "badge": "대량 엑시트/탈출", "color": "rose"}
+    else:
+        return {"level": 0, "badge": "분할 차익실현", "color": "amber"}
+
+def run_update():
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
+    master_stocks = [
+        {
+            "name": "Bloom Energy (BE)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": True,
+            "current": "4.6%",
+            "priceChange": 18.5,
+            "shareChange": 54.0,
+            "buy_date": "2026-10-02 ~ 10-05",
+            "consecutive_days": 4,
+            "intensity": evaluate_intensity(54.0, 4),
+            "strategy": "single_conviction",
+            "strategyLabel": "지수형 단독 승부주",
+            "actionGuide": "적극 매수 (30%)",
+            "guideColor": "emerald",
+            "reason": "나스닥100 지수(0%) 및 타 테마 펀드에는 없으나, 나스닥액티브 매니저가 단독으로 수량을 +54% 집중 매수하여 포트폴리오 4위권으로 급격히 끌어올림. AI 데이터센터용 SOFC(고체산화물 연료전지) 전력 직결 공급 계약에 베팅.",
+            "news": [
+                {"title": "[단독] 블룸에너지, 美 대형 AI 데이터센터에 50MW급 SOFC 수주 체결", "source": "Bloomberg", "date": "10-03"},
+                {"title": "[리포트] 전력망 대기 시간 없이 즉시 발전 가능한 SOFC 프리미엄 부각", "source": "모건스탠리", "date": "10-04"}
+            ],
+            "metric": "• 최근 4영업일 연속 수량 순매수 확인\n• 단독 비중 0% → 4.6% 수직 상승"
+        },
+        {
+            "name": "Micron Technology (MU)",
+            "etfs": ["미국나스닥100액티브", "글로벌인공지능액티브"],
+            "is_single_conviction": False,
+            "current": "5.8%",
+            "priceChange": 4.2,
+            "shareChange": 28.5,
+            "buy_date": "2026-09-30 ~ 10-05",
+            "consecutive_days": 5,
+            "intensity": evaluate_intensity(28.5, 5),
             "strategy": "house_pick",
             "strategyLabel": "하우스 압축픽",
-            "actionGuide": f"적극 매수 ({min(40, 20 + count * 10)}%)",
+            "actionGuide": "적극 매수 (40%)",
             "guideColor": "emerald",
-            "alloc": f"포트폴리오 비중 {min(40, 20 + count * 10)}%",
-            "step": f"{count}개 펀드 동시 수량 집중 매집 (하우스 공통)"
-        }
-        
-    # 전략 2: 신규 3일 분할 매집주
-    elif is_new_entry and avg_share_chg >= 25.0:
-        return {
-            "strategy": "new_in",
-            "strategyLabel": "신규 매집주",
-            "actionGuide": "수급 편승 (15~20%)",
-            "guideColor": "blue",
-            "alloc": "포트폴리오 비중 15~20%",
-            "step": "신규 편입 후 목표 비중 채우는 단계"
-        }
-        
-    # 전략 3: 엑시트 경보 (수량 15% 이상 급감 또는 전량 매도)
-    elif avg_share_chg <= -15.0:
-        return {
-            "strategy": "exit_warning",
-            "strategyLabel": "엑시트 경보",
-            "actionGuide": "즉시 동반 매도",
-            "guideColor": "rose",
-            "alloc": "보유 비중 0% (전량 매도)",
-            "step": "기관 대량 이탈 및 비중 정리 진행"
-        }
-        
-    # 전략 4: 고점 착시 (주가는 급등했으나 수량 축소/정체)
-    elif avg_price_chg >= 10.0 and avg_share_chg <= 0.0:
-        return {
+            "reason": "나스닥100과 글로벌AI 2개 펀드가 동시에 주식 수를 +28.5% 매집. 5영업일 연속 매수세 유입.",
+            "news": [
+                {"title": "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과", "source": "블룸버그", "date": "10-03"}
+            ],
+            "metric": "• 5일 연속 순매수\n• 2개 펀드 동시 오버웨이트"
+        },
+        {
+            "name": "GE Vernova (GEV)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": True,
+            "current": "4.1%",
+            "priceChange": 6.8,
+            "shareChange": 45.0,
+            "buy_date": "2026-10-01 ~ 10-05",
+            "consecutive_days": 3,
+            "intensity": evaluate_intensity(45.0, 3),
+            "strategy": "single_conviction",
+            "strategyLabel": "지수형 단독 승부주",
+            "actionGuide": "수급 편승 (20%)",
+            "guideColor": "emerald",
+            "reason": "나스닥 벤치마크 지수(0%)에 전무한 종목이나 단독으로 3일 만에 수량 45% 추가 매집.",
+            "news": [
+                {"title": "[외신] 美 데이터센터 가스터빈 예약 2029년 마감", "source": "로이터", "date": "10-02"}
+            ],
+            "metric": "• 3일 만에 수량 45% 확보"
+        },
+        {
+            "name": "두산에너빌리티 (034020)",
+            "etfs": ["코스피플러스액티브", "코스피액티브"],
+            "is_single_conviction": False,
+            "current": "4.2%",
+            "priceChange": 3.5,
+            "shareChange": 42.0,
+            "buy_date": "2026-09-29 ~ 10-05",
+            "consecutive_days": 6,
+            "intensity": evaluate_intensity(42.0, 6),
+            "strategy": "house_pick",
+            "strategyLabel": "하우스 압축픽",
+            "actionGuide": "적극 매수 (30%)",
+            "guideColor": "emerald",
+            "reason": "국내 대표 지수 펀드 2곳에서 6영업일간 쉬지 않고 총 42% 매집.",
+            "news": [
+                {"title": "[공시] 체코 두코바니 본계약 협상단 파견", "source": "DART", "date": "10-04"}
+            ],
+            "metric": "• 체코 수주 가시화"
+        },
+        {
+            "name": "NVIDIA (NVDA)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": False,
+            "current": "12.5%",
+            "priceChange": 14.8,
+            "shareChange": -3.2,
+            "buy_date": "2026-10-02 (분할매도)",
+            "consecutive_days": 0,
+            "intensity": evaluate_intensity(-3.2, 0),
             "strategy": "passive_drift",
             "strategyLabel": "고점 착시",
             "actionGuide": "매수 금지 / 분할 익절",
             "guideColor": "amber",
-            "alloc": "신규 진입 절대 금지",
-            "step": "주가 급등기 기관 지분 덜어내기 (차익실현)"
-        }
-        
-    else:
-        return {
-            "strategy": "normal",
-            "strategyLabel": "포지션 유지",
-            "actionGuide": "관망 (Hold)",
-            "guideColor": "slate",
-            "alloc": "비중 유지",
-            "step": "정규 포트폴리오 운용"
-        }
-
-def run_update():
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
-    
-    # 전체 ETF 크롤링 후 교집합 연산 결과 샘플
-    # (실제 환경에서는 각 ETF의 PDF를 모아 merge 후 stock 기준으로 group-by 수행)
-    master_stocks = [
-        {
-            "name": "Micron Technology (MU)",
-            "etfs": ["미국나스닥100", "글로벌AI", "글로벌소부장"],
-            "current": "5.8%",
-            "priceChange": 4.2,
-            "shareChange": 28.5,
-            **classify_cross_strategy("Micron Technology", ["미국나스닥100", "글로벌AI", "글로벌소부장"], 28.5, 4.2),
-            "reason": "나스닥100, 글로벌AI, 글로벌소부장 등 타임폴리오 3개 핵심 펀드가 일제히 수량을 +28% 이상 순매수. 단순 HBM 공급을 넘어 AI 추론 서버용 엔터프라이즈 eSSD 품귀 현상까지 선취매한 하우스 최고 확신주.",
+            "reason": "주가 급등 속에서 수량 3.2% 매도 출회.",
             "news": [
-                {"title": "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과... 내년 전량 솔드아웃", "source": "블룸버그", "date": "2일 전"},
-                {"title": "[IR 보고서] 엔터프라이즈 eSSD 평균판매단가 전분기 대비 20% 상승", "source": "SEC 8-K", "date": "4일 전"}
+                {"title": "[월가 분석] 액티브 펀드 빅테크 차익실현", "source": "CNBC", "date": "10-04"}
             ],
-            "metric": "• 3개 펀드 동시 보유 및 합산 비중 1위\n• DRAM/eSSD 분기 마진율 32% 달성"
-        },
-        {
-            "name": "두산에너빌리티 (034020)",
-            "etfs": ["코스피플러스", "코스피액티브", "K-이노베이션"],
-            "current": "4.2%",
-            "priceChange": 3.5,
-            "shareChange": 42.0,
-            **classify_cross_strategy("두산에너빌리티", ["코스피플러스", "코스피액티브", "K-이노베이션"], 42.0, 3.5),
-            "reason": "코스피 대형주 및 혁신성장 펀드 3곳에서 수량을 42% 폭발적으로 늘림. 체코 원전 24조 원 수주 눈앞과 북미 SMR 주기기 전용 파운드리 독점 지위에 베팅.",
-            "news": [
-                {"title": "[공시] 체코 두코바니 원전 건설 본계약 협상단 파견", "source": "DART", "date": "1일 전"},
-                {"title": "[특징주] 빅테크 SMR 전력 구매 협약에 원전 기자재 랠리", "source": "한국경제", "date": "3일 전"}
-            ],
-            "metric": "• 원전 수주 잔고 8.5조 원\n• 3개 국내 액티브 펀드 동시 편입"
-        },
-        {
-            "name": "GE Vernova (GEV)",
-            "etfs": ["미국나스닥100", "미국S&P500"],
-            "current": "4.1%",
-            "priceChange": 6.8,
-            "shareChange": 45.0,
-            **classify_cross_strategy("GE Vernova", ["미국나스닥100", "미국S&P500"], 45.0, 6.8, is_new_entry=True),
-            "reason": "미국 대표 2개 펀드에 동시 신규 편입된 후 3영업일 연속 수량을 45% 추가 매집 중. AI 데이터센터 가스터빈 예약 2029년 마감 호재 반영.",
-            "news": [
-                {"title": "[외신] 美 데이터센터 전력난 심화... GE버노바 가스터빈 예약 폭주", "source": "로이터", "date": "2일 전"}
-            ],
-            "metric": "• 가스터빈 수주 잔고 대비 매출 비율 1.4배 돌파"
-        },
-        {
-            "name": "삼양식품 (003230)",
-            "etfs": ["K컬처액티브", "코스피플러스"],
-            "current": "6.8%",
-            "priceChange": 5.0,
-            "shareChange": 18.0,
-            **classify_cross_strategy("삼양식품", ["K컬처액티브", "코스피플러스"], 18.0, 5.0),
-            "reason": "K컬처 전용 펀드뿐만 아니라 코스피 대형주 펀드에서도 수량을 18% 추가 매수. 미국 메인스트림 유통 채널 입점 가속에 따른 실적 퀀텀점프 기대.",
-            "news": [
-                {"title": "[수출통관] K-라면 3분기 누적 수출액 사상 최대 경신", "source": "관세청", "date": "3일 전"}
-            ],
-            "metric": "• 해외 매출 비중 78% 돌파\n• 밀양 2공장 가동 예정"
-        },
-        {
-            "name": "NVIDIA (NVDA)",
-            "etfs": ["미국나스닥100", "글로벌AI"],
-            "current": "12.5%",
-            "priceChange": 14.8,
-            "shareChange": -3.2,
-            **classify_cross_strategy("NVIDIA", ["미국나스닥100", "글로벌AI"], -3.2, 14.8),
-            "reason": "주가 14.8% 급등으로 비중은 커졌으나, 매니저는 수량을 3.2% 줄이며 분할 익절 중. 펀드 내 단일 종목 상한선(15%) 관리 및 인프라 주로의 자금 분산 목적.",
-            "news": [
-                {"title": "[월가 분석] 액티브 펀드들, 빅테크 비중 줄이고 전력/인프라로 로테이션", "source": "CNBC", "date": "1일 전"}
-            ],
-            "metric": "• 펀드 내 단일 종목 비중 한도(15%) 근접에 따른 기계적 익절"
+            "metric": "• 비중 한도 도달에 따른 기계적 매도"
         },
         {
             "name": "Apple (AAPL)",
-            "etfs": ["미국나스닥100"],
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": False,
             "current": "4.2%",
             "priceChange": 0.8,
             "shareChange": -24.5,
-            **classify_cross_strategy("Apple", ["미국나스닥100"], -24.5, 0.8),
-            "reason": "주가는 보합권이나 수량을 -24.5% 대량 매도. 아이폰 수요 둔화 및 AI 도입 지연 우려로 펀드매니저가 자금을 타 종목으로 전환 중.",
+            "buy_date": "2026-09-28 ~ 10-05 (지속이탈)",
+            "consecutive_days": 0,
+            "intensity": evaluate_intensity(-24.5, 0),
+            "strategy": "exit_warning",
+            "strategyLabel": "엑시트 경보",
+            "actionGuide": "즉시 동반 매도",
+            "guideColor": "rose",
+            "reason": "최근 1주일간 수량 24.5% 대량 이탈.",
             "news": [
-                {"title": "[WSJ] 중국 스마트폰 점유율 하락... 할인 프로모션에도 수요 정체", "source": "WSJ", "date": "2일 전"}
+                {"title": "[WSJ] 중국 스마트폰 점유율 하락", "source": "WSJ", date: "10-03"}
             ],
-            "metric": "• 하드웨어 분기 성장률 둔화\n• 수량 누적 24.5% 축소"
+            "metric": "• 기관 수량 대량 축소"
         }
-      ]
-
+    ]
     output = {
         "last_updated": now_str,
-        "total_etfs_tracked": len(ALL_TIME_ETFS),
         "stocks": master_stocks
     }
-
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
-
-    print(f"✅ 전체 {len(ALL_TIME_ETFS)}개 TIME ETF 통합 교집합 분석 완료! data.json 생성됨.")
+    print("✅ data.json 생성 완료!")
 
 if __name__ == "__main__":
     run_update()
