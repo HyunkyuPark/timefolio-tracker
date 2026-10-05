@@ -6,25 +6,18 @@ from datetime import datetime
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업 (정규 6자리 코드)
+# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업
 ETF_REGISTRY = {
-    # 1. 국내 대표 지수 & 밸류업 (코스닥액티브 400570 정식 포함)
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
     "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
     "400580": {"name": "TIME 코스피액티브", "is_broad": True},
     "400570": {"name": "TIME 코스닥액티브", "is_broad": True},
     "495060": {"name": "TIME 코리아밸류업액티브", "is_broad": True},
-
-    # 2. 미국 대표 지수 (알파 승부주 타깃)
-    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
-    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
-
-    # 3. 국내 특화 섹터/테마
     "404120": {"name": "TIME K신재생에너지액티브", "is_broad": False},
     "449180": {"name": "TIME K바이오액티브", "is_broad": False},
     "449190": {"name": "TIME K-이노베이션액티브", "is_broad": False},
     "432320": {"name": "TIME K컬처액티브", "is_broad": False},
-
-    # 4. 글로벌 핵심 테마 (방산, AI, 소부장, 소비)
     "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False},
     "478150": {"name": "TIME 글로벌우주테크&방산액티브", "is_broad": False},
     "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False},
@@ -33,28 +26,75 @@ ETF_REGISTRY = {
 
 SESSION = requests.Session()
 SESSION.headers.update({
-    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
-    "Referer": "https://m.stock.naver.com/",
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "ko-KR,ko;q=0.9"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Referer": "https://finance.naver.com/",
+    "Accept": "*/*"
 })
 
 def fetch_etf_holdings(code):
-    url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
     items = {}
+
+    # 엔드포인트 1: 네이버 통합 종목 API
     try:
-        res = SESSION.get(url, timeout=5)
+        url = f"https://m.stock.naver.com/api/stock/{code}/integration"
+        res = SESSION.get(url, timeout=4)
         if res.status_code == 200:
-            data = res.json().get("result", {}).get("portfolio", [])
-            for r in data:
-                nm = r.get("itemName") or r.get("stockName")
+            data = res.json()
+            # integration 응답 구조 내 etfPortfolio 탐색
+            p_list = data.get("etfPortfolio", [])
+            for r in p_list:
+                nm = r.get("itemName") or r.get("stockName") or ""
                 wt = float(r.get("weight") or 0.0)
                 sh = float(r.get("share") or r.get("quantity") or 0.0)
                 pr = float(r.get("price") or 0.0)
                 if nm and "원화" not in nm and "현금" not in nm and "예금" not in nm and wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+            if items:
+                return items
     except Exception as e:
-        print(f"[{code}] 조회 오류: {e}")
+        pass
+
+    # 엔드포인트 2: 네이버 모바일 stock portfolio
+    try:
+        url = f"https://m.stock.naver.com/api/stock/{code}/etf/portfolio"
+        res = SESSION.get(url, timeout=4)
+        if res.status_code == 200:
+            data = res.json()
+            p_list = data.get("portfolio", []) if isinstance(data, dict) else []
+            for r in p_list:
+                nm = r.get("itemName") or r.get("stockName") or ""
+                wt = float(r.get("weight") or 0.0)
+                sh = float(r.get("share") or r.get("quantity") or 0.0)
+                pr = float(r.get("price") or 0.0)
+                if nm and "원화" not in nm and wt > 0.05:
+                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+            if items:
+                return items
+    except Exception as e:
+        pass
+
+    # 엔드포인트 3: 다음 증권 포털 API
+    try:
+        url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
+        d_headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Referer": "https://finance.daum.net/"
+        }
+        res = SESSION.get(url, headers=d_headers, timeout=4)
+        if res.status_code == 200:
+            data = res.json().get("data", [])
+            for r in data:
+                nm = r.get("name", "")
+                wt = float(r.get("weight") or 0.0)
+                sh = float(r.get("volume") or 0.0)
+                pr = float(r.get("price") or 0.0)
+                if nm and "원화" not in nm and wt > 0.05:
+                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+            if items:
+                return items
+    except Exception as e:
+        pass
+
     return items
 
 def query_gemini_thesis(top_stocks):
@@ -128,8 +168,7 @@ def main():
         else:
             print(f"❌ [{meta['name']}] 수집 대기")
         
-        # IP 차단 방지를 위한 0.5초 대기
-        time.sleep(0.5)
+        time.sleep(0.3)
 
     print(f"📊 총 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
 
