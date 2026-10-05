@@ -1,0 +1,12 @@
+// index.html 스크립트 부분에 추가:
+async function loadLiveData() {
+  try {
+    const res = await fetch('./data.json?t=' + new Date().getTime());
+    const data = await res.json();
+    document.getElementById('lastUpdated').textContent = "최근 자동수집: " + data.last_updated;
+    // data 객체로 테이블 렌더링
+  } catch (e) {
+    console.log("로컬/기본 데이터로 렌더링합니다.");
+  }
+}
+window.onload = loadLiveData;
