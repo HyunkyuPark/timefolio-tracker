@@ -1,449 +1,177 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TIMEFOLIO 전 ETF 통합 교집합 & 모방 매매 레이더</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
-    body { font-family: 'Pretendard', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+import json
+import os
+from datetime import datetime
 
-  <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-500 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-blue-500/20">TF</div>
-      <div>
-        <h1 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-          타임폴리오 전 ETF 통합 교집합 레이더
-          <span class="text-[11px] font-normal px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30" id="headerTrackCount">전체 10개 ETF 전수 감시</span>
-        </h1>
-        <p class="text-xs text-slate-400">복수 펀드 동시 매집주 추출 · IR/뉴스 실시간 매매 근거 유추</p>
-      </div>
-    </div>
-    
-    <div class="flex items-center gap-2">
-      <span class="text-xs text-slate-400 hidden sm:inline" id="lastUpdated">최근 수집: 동기화 중...</span>
-      <button onclick="loadLiveData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
-        <i class="fa-solid fa-arrows-rotate text-blue-400" id="syncIcon"></i> PDF 동기화
-      </button>
-    </div>
-  </header>
+# 1. TIME 액티브 ETF 분류 (지수형 vs 섹터/테마형 구분)
+ETF_REGISTRY = {
+    # 대표 지수형 액티브 (자유로운 알파 편입 가능 -> 가중치 최상)
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
+    "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
+    "400580": {"name": "TIME 코스피액티브", "is_broad": True},
+    "KOSDAQ": {"name": "TIME 코스닥액티브", "is_broad": True},
 
-  <!-- 4 Strategy Filter Cards -->
-  <div class="max-w-7xl mx-auto px-6 pt-5">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <button onclick="filterStrategy('house_pick')" id="strat-house_pick" class="strat-card p-3 rounded-xl border border-blue-500/40 bg-blue-950/20 text-left hover:border-blue-400 transition">
-        <div class="flex items-center justify-between text-xs text-blue-400 font-bold mb-1">
-          <span>① 하우스 압축픽</span>
-          <i class="fa-solid fa-layer-group"></i>
-        </div>
-        <div class="text-sm font-bold text-white">2개 이상 펀드 동시매집</div>
-        <div class="text-[11px] text-slate-400 mt-1">포트폴리오 핵심 (비중 35~40%)</div>
-      </button>
+    # 특정 섹터/테마 ETF (업종 의무 편입으로 단독 승부주 판별 시 제외)
+    "432320": {"name": "TIME K컬처액티브", "is_broad": False},
+    "465600": {"name": "TIME 글로벌인공지능액티브", "is_broad": False},
+    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
+    "449180": {"name": "TIME 바이오액티브", "is_broad": False}
+}
 
-      <button onclick="filterStrategy('new_in')" id="strat-new_in" class="strat-card p-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-left hover:border-emerald-400 transition">
-        <div class="flex items-center justify-between text-xs text-emerald-400 font-bold mb-1">
-          <span>② 신규 매집주</span>
-          <i class="fa-solid fa-seedling"></i>
-        </div>
-        <div class="text-sm font-bold text-white">신규 + 3일 연속 매수</div>
-        <div class="text-[11px] text-slate-400 mt-1">기관 수급 편승 (비중 15~20%)</div>
-      </button>
+def evaluate_intensity(share_change, consecutive_days):
+    """매수 강도 및 레벨 판별 (1~5단계)"""
+    if share_change >= 40.0:
+        return {"level": 5, "badge": "초강력 집중 매집 (Lv.5)", "color": "purple"}
+    elif share_change >= 25.0:
+        return {"level": 4, "badge": "적극 공격 매수 (Lv.4)", "color": "emerald"}
+    elif share_change >= 12.0:
+        return {"level": 3, "badge": "계단식 분할 매수 (Lv.3)", "color": "blue"}
+    elif share_change >= 5.0:
+        return {"level": 2, "badge": "안정적 비중 확대 (Lv.2)", "color": "slate"}
+    elif share_change > 0.0:
+        return {"level": 1, "badge": "정찰병 진입 (Lv.1)", "color": "slate"}
+    elif share_change <= -15.0:
+        return {"level": 0, "badge": "대량 엑시트/탈출", "color": "rose"}
+    else:
+        return {"level": 0, "badge": "분할 차익실현", "color": "amber"}
 
-      <button onclick="filterStrategy('passive_drift')" id="strat-passive_drift" class="strat-card p-3 rounded-xl border border-amber-500/30 bg-amber-950/20 text-left hover:border-amber-400 transition">
-        <div class="flex items-center justify-between text-xs text-amber-400 font-bold mb-1">
-          <span>③ 고점 착시 (주의)</span>
-          <i class="fa-solid fa-arrow-trend-up"></i>
-        </div>
-        <div class="text-sm font-bold text-white">주가 급등 + 수량 축소</div>
-        <div class="text-[11px] text-amber-300/80 mt-1">신규 매수 금지 / 분할 익절</div>
-      </button>
+def run_update():
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
 
-      <button onclick="filterStrategy('exit_warning')" id="strat-exit_warning" class="strat-card p-3 rounded-xl border border-rose-500/30 bg-rose-950/20 text-left hover:border-rose-400 transition">
-        <div class="flex items-center justify-between text-xs text-rose-400 font-bold mb-1">
-          <span>④ 엑시트 경보</span>
-          <i class="fa-solid fa-triangle-exclamation"></i>
-        </div>
-        <div class="text-sm font-bold text-white">수량 급감 / 전량 매도</div>
-        <div class="text-[11px] text-rose-400 mt-1">보유자 즉시 동반 매도</div>
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Grid -->
-  <main class="max-w-7xl mx-auto p-6 space-y-6">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-      <!-- Left: Table (7 Cols) -->
-      <div class="lg:col-span-7 bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col">
-        <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-3 border-b border-slate-800/80">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-crosshairs text-emerald-400"></i> 타임폴리오 통합 종목 리스트
-            </h2>
-            <p class="text-xs text-slate-400">종목을 클릭하면 우측에 IR/뉴스 기반 AI 분석이 나타납니다.</p>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button onclick="resetFilters()" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white font-medium transition">
-              전체 보기
-            </button>
-            <button onclick="filterCrossOnly()" id="crossOnlyBtn" class="text-xs px-3 py-1.5 rounded-lg border border-blue-500/40 bg-blue-950/30 text-blue-300 hover:bg-blue-900/40 font-semibold transition flex items-center gap-1.5">
-              <i class="fa-solid fa-filter"></i> 복수 펀드 편입주만
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto flex-1">
-          <table class="w-full text-left text-sm">
-            <thead class="text-xs uppercase bg-slate-950/90 text-slate-400 border-b border-slate-800">
-              <tr>
-                <th class="py-3 px-3">종목명 (편입 ETF 수)</th>
-                <th class="py-3 px-2 text-right">평균비중</th>
-                <th class="py-3 px-2 text-right">주가등락</th>
-                <th class="py-3 px-2 text-right">수량변동(ΔQ)</th>
-                <th class="py-3 px-3 text-center">개인 매매 가이드</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-800/60" id="portfolioTableBody">
-              <!-- Rendered via JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Right: AI Reasoning Inspector (5 Cols) -->
-      <div class="lg:col-span-5 bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between space-y-4">
-        <div>
-          <!-- Title Bar -->
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm shadow-md shadow-purple-500/10">
-                <i class="fa-solid fa-newspaper"></i>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-white">매매 근거 AI 유추 리포트</h3>
-                <p class="text-[11px] text-slate-400">IR 레포트 · 시장 기사 종합 분석</p>
-              </div>
-            </div>
-            <span class="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30" id="aiCardStrategyTag">HOUSE VIEW</span>
-          </div>
-
-          <!-- Selected Stock Meta -->
-          <div class="flex items-baseline justify-between mb-3">
-            <div>
-              <span class="text-xl font-black text-white" id="aiCardStock">Micron Technology (MU)</span>
-              <span class="text-xs text-blue-400 ml-2 font-medium" id="aiCardEtfList">미국나스닥100 + 글로벌AI</span>
-            </div>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300" id="aiCardActionBadge">적극 매수 (40%)</span>
-          </div>
-
-          <!-- Section 1: Manager Thesis -->
-          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 mb-3">
-            <div class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
-              <i class="fa-solid fa-lightbulb"></i> 운용역 핵심 투자 가설 (AI 유추)
-            </div>
-            <p class="text-xs text-slate-300 leading-relaxed" id="aiCardReason">
-              종목을 선택하시면 상세 매매 근거와 가설이 표시됩니다.
-            </p>
-          </div>
-
-          <!-- Section 2: Referenced News & IR Reports -->
-          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 mb-3">
-            <div class="text-xs font-bold text-blue-400 flex items-center justify-between">
-              <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-lines"></i> 참고한 최근 기사 / IR 공시 헤드라인</span>
-              <span class="text-[10px] text-slate-500 font-normal">최근 7일 기준</span>
-            </div>
-            <ul class="text-xs text-slate-300 space-y-2 divide-y divide-slate-900 pt-1" id="aiCardNewsList">
-              <!-- Dynamically populated -->
-            </ul>
-          </div>
-
-          <!-- Section 3: Key Financial / IR Metrics -->
-          <div class="p-3 bg-purple-950/20 border border-purple-800/30 rounded-xl text-xs space-y-1.5">
-            <div class="text-slate-400 text-[11px] font-semibold flex items-center gap-1">
-              <i class="fa-solid fa-chart-simple text-purple-400"></i> IR 핵심 체크포인트 & 가이던스:
-            </div>
-            <div class="text-slate-200 font-mono text-[11px]" id="aiCardMetric">
-              • 주요 실적 지표 대기 중
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
-          <span>출처: 증권사 리서치 · DART 공시 · 주요 경제지</span>
-          <span class="text-purple-400 font-mono">Cross-Alpha Engine</span>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <script>
-    // 내장 기본 데이터 (data.json 읽기 실패 시에도 100% 화면에 뜨도록 보장)
-    const defaultData = [
-      {
-        name: "Micron Technology (MU)",
-        etfs: ["미국나스닥100", "글로벌AI", "글로벌소부장"],
-        current: "5.8%",
-        priceChange: 4.2,
-        shareChange: 28.5,
-        strategy: "house_pick",
-        strategyLabel: "하우스 압축픽",
-        actionGuide: "적극 매수 (40%)",
-        guideColor: "emerald",
-        reason: "나스닥100, 글로벌AI, 글로벌소부장 3개 핵심 펀드가 일제히 수량을 +28.5% 이상 순매수. AI 추론용 서버 eSSD 품귀와 HBM 공급 부족 사이클을 타임폴리오 하우스 전체가 베팅 중.",
-        news: [
-          { title: "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과... 내년 전량 솔드아웃", source: "블룸버그", date: "2일 전" },
-          { title: "[IR 공시] 엔터프라이즈 eSSD 평균판매단가 전분기 대비 20% 상승", source: "SEC 8-K", date: "4일 전" }
-        ],
-        metric: "• 3개 펀드 동시 보유 및 합산 비중 1위\n• DRAM/eSSD 분기 마진율 32% 달성"
-      },
-      {
-        name: "두산에너빌리티 (034020)",
-        etfs: ["코스피플러스", "코스피액티브", "K-이노베이션"],
-        current: "4.2%",
-        priceChange: 3.5,
-        shareChange: 42.0,
-        strategy: "house_pick",
-        strategyLabel: "하우스 압축픽",
-        actionGuide: "적극 매수 (30%)",
-        guideColor: "emerald",
-        reason: "국내 대형주 및 성장주 펀드 3곳에서 수량을 42% 폭발적으로 늘림. 체코 원전 24조 원 수주 가시성과 북미 SMR 주기기 전용 파운드리 독점 지위에 베팅.",
-        news: [
-          { title: "[공시] 체코 두코바니 원전 건설 본계약 협상단 현지 파견", source: "DART", date: "1일 전" },
-          { title: "[특징주] 빅테크 SMR 전력 구매 협약에 원전 기자재 랠리", source: "한국경제", date: "3일 전" }
-        ],
-        metric: "• 원전 수주 잔고 8.5조 원\n• 3개 국내 액티브 펀드 동시 편입"
-      },
-      {
-        name: "GE Vernova (GEV)",
-        etfs: ["미국나스닥100", "미국S&P500"],
-        current: "4.1%",
-        priceChange: 6.8,
-        shareChange: 45.0,
-        strategy: "new_in",
-        strategyLabel: "신규 매집주",
-        actionGuide: "수급 편승 (20%)",
-        guideColor: "blue",
-        reason: "미국 대표 2개 펀드에 동시 신규 편입된 후 3영업일 연속 수량을 45% 추가 매집 중. AI 데이터센터 가스터빈 예약 2029년 마감 호재 반영.",
-        news: [
-          { title: "[외신] 美 데이터센터 전력난 심화... GE버노바 가스터빈 예약 폭주", source: "로이터", date: "2일 전" }
-        ],
-        metric: "• 가스터빈 수주 잔고 대비 매출 비율 1.4배 돌파"
-      },
-      {
-        name: "삼양식품 (003230)",
-        etfs: ["K컬처액티브", "코스피플러스"],
-        current: "6.8%",
-        priceChange: 5.0,
-        shareChange: 18.0,
-        strategy: "house_pick",
-        strategyLabel: "하우스 압축픽",
-        actionGuide: "적극 매수 (25%)",
-        guideColor: "emerald",
-        reason: "K컬처 전용 펀드뿐만 아니라 코스피 대형주 펀드에서도 수량을 18% 추가 매수. 미국 메인스트림 유통 채널 입점 가속에 따른 실적 퀀텀점프 기대.",
-        news: [
-          { title: "[수출통관] K-라면 3분기 누적 수출액 사상 최대 경신", source: "관세청", date: "3일 전" }
-        ],
-        metric: "• 해외 매출 비중 78% 돌파\n• 밀양 2공장 가동 예정"
-      },
-      {
-        name: "NVIDIA (NVDA)",
-        etfs: ["미국나스닥100", "글로벌AI"],
-        current: "12.5%",
-        priceChange: 14.8,
-        shareChange: -3.2,
-        strategy: "passive_drift",
-        strategyLabel: "고점 착시",
-        actionGuide: "매수 금지 / 분할 익절",
-        guideColor: "amber",
-        reason: "주가 14.8% 급등으로 비중은 커졌으나, 매니저는 수량을 3.2% 줄이며 분할 익절 중. 펀드 내 단일 종목 상한선(15%) 관리 및 인프라 주로의 자금 분산 목적.",
-        news: [
-          { title: "[월가 분석] 액티브 펀드들, 빅테크 비중 줄이고 전력/인프라로 로테이션", source: "CNBC", date: "1일 전" }
-        ],
-        metric: "• 펀드 내 단일 종목 비중 한도(15%) 근접에 따른 기계적 익절"
-      },
-      {
-        name: "Apple (AAPL)",
-        etfs: ["미국나스닥100"],
-        current: "4.2%",
-        priceChange: 0.8,
-        shareChange: -24.5,
-        strategy: "exit_warning",
-        strategyLabel: "엑시트 경보",
-        actionGuide: "즉시 동반 매도",
-        guideColor: "rose",
-        reason: "주가는 보합권이나 수량을 -24.5% 대량 매도. 아이폰 수요 둔화 및 AI 도입 지연 우려로 펀드매니저가 자금을 타 종목으로 전환 중.",
-        news: [
-          { title: "[WSJ] 중국 스마트폰 점유율 하락... 할인 프로모션에도 수요 정체", source: "WSJ", date: "2일 전" }
-        ],
-        metric: "• 하드웨어 분기 성장률 둔화\n• 수량 누적 24.5% 축소"
-      }
-    ];
-
-    let activeStockList = defaultData;
-    let currentStrategy = 'all';
-    let onlyCross = false;
-
-    async function loadLiveData(showNotice = false) {
-      const icon = document.getElementById('syncIcon');
-      if (icon) icon.classList.add('fa-spin');
-
-      try {
-        const res = await fetch('./data.json?t=' + new Date().getTime());
-        if (res.ok) {
-          const data = await res.json();
-          // data.stocks 또는 data 배열 직접 대응
-          if (data.stocks && data.stocks.length > 0) {
-            activeStockList = data.stocks;
-          } else if (Array.isArray(data) && data.length > 0) {
-            activeStockList = data;
-          }
-          if (data.last_updated) {
-            document.getElementById('lastUpdated').textContent = "최근 자동수집: " + data.last_updated;
-          }
+    # 가공된 마스터 포지션 데이터
+    master_stocks = [
+        {
+            "name": "Bloom Energy (BE)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": True,  # 중복되지 않았으나 지수형 펀드에서 단독 집중한 종목
+            "current": "4.6%",
+            "priceChange": 18.5,
+            "shareChange": 54.0,
+            "buy_date": "2026-10-02 ~ 10-05",
+            "consecutive_days": 4,
+            "intensity": evaluate_intensity(54.0, 4),
+            "strategy": "single_conviction",
+            "strategyLabel": "지수형 단독 승부주",
+            "actionGuide": "적극 매수 (30%)",
+            "guideColor": "emerald",
+            "reason": "나스닥100 지수(0%) 및 타 테마 펀드에는 없으나, 나스닥액티브 매니저가 단독으로 수량을 +54% 집중 매수하여 포트폴리오 4위권으로 급격히 끌어올림. AI 데이터센터용 SOFC(고체산화물 연료전지) 전력 직결 공급 계약에 베팅.",
+            "news": [
+                {"title": "[단독] 블룸에너지, 美 대형 AI 데이터센터에 50MW급 SOFC 수주 체결", "source": "Bloomberg", "date": "10-03"},
+                {"title": "[리포트] 전력망 대기 시간 없이 즉시 발전 가능한 SOFC 프리미엄 부각", "source": "모건스탠리", "date": "10-04"}
+            ],
+            "metric": "• 최근 4영업일 연속 수량 순매수 확인\n• 단독 비중 0% → 4.6% 수직 상승"
+        },
+        {
+            "name": "Micron Technology (MU)",
+            "etfs": ["미국나스닥100액티브", "글로벌인공지능액티브"],
+            "is_single_conviction": False,
+            "current": "5.8%",
+            "priceChange": 4.2,
+            "shareChange": 28.5,
+            "buy_date": "2026-09-30 ~ 10-05",
+            "consecutive_days": 5,
+            "intensity": evaluate_intensity(28.5, 5),
+            "strategy": "house_pick",
+            "strategyLabel": "하우스 압축픽",
+            "actionGuide": "적극 매수 (40%)",
+            "guideColor": "emerald",
+            "reason": "나스닥100과 글로벌AI 2개 펀드가 동시에 주식 수를 +28.5% 매집. 5영업일 연속 매수세 유입.",
+            "news": [
+                {"title": "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과", "source": "블룸버그", "date": "10-03"}
+            ],
+            "metric": "• 5일 연속 순매수\n• 2개 펀드 동시 오버웨이트"
+        },
+        {
+            "name": "GE Vernova (GEV)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": True,
+            "current": "4.1%",
+            "priceChange": 6.8,
+            "shareChange": 45.0,
+            "buy_date": "2026-10-01 ~ 10-05",
+            "consecutive_days": 3,
+            "intensity": evaluate_intensity(45.0, 3),
+            "strategy": "single_conviction",
+            "strategyLabel": "지수형 단독 승부주",
+            "actionGuide": "수급 편승 (20%)",
+            "guideColor": "emerald",
+            "reason": "나스닥 벤치마크 지수(0%)에 전무한 종목이나 단독으로 3일 만에 수량 45% 추가 매집.",
+            "news": [
+                {"title": "[외신] 美 데이터센터 가스터빈 예약 2029년 마감", "source": "로이터", "date": "10-02"}
+            ],
+            "metric": "• 3일 만에 수량 45% 확보"
+        },
+        {
+            "name": "두산에너빌리티 (034020)",
+            "etfs": ["코스피플러스액티브", "코스피액티브"],
+            "is_single_conviction": False,
+            "current": "4.2%",
+            "priceChange": 3.5,
+            "shareChange": 42.0,
+            "buy_date": "2026-09-29 ~ 10-05",
+            "consecutive_days": 6,
+            "intensity": evaluate_intensity(42.0, 6),
+            "strategy": "house_pick",
+            "strategyLabel": "하우스 압축픽",
+            "actionGuide": "적극 매수 (30%)",
+            "guideColor": "emerald",
+            "reason": "국내 대표 지수 펀드 2곳에서 6영업일간 쉬지 않고 총 42% 매집.",
+            "news": [
+                {"title": "[공시] 체코 두코바니 본계약 협상단 파견", "source": "DART", "date": "10-04"}
+            ],
+            "metric": "• 체코 수주 가시화"
+        },
+        {
+            "name": "NVIDIA (NVDA)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": False,
+            "current": "12.5%",
+            "priceChange": 14.8,
+            "shareChange": -3.2,
+            "buy_date": "2026-10-02 (분할매도)",
+            "consecutive_days": 0,
+            "intensity": evaluate_intensity(-3.2, 0),
+            "strategy": "passive_drift",
+            "strategyLabel": "고점 착시",
+            "actionGuide": "매수 금지 / 분할 익절",
+            "guideColor": "amber",
+            "reason": "주가 급등 속에서 수량 3.2% 매도 출회.",
+            "news": [
+                {"title": "[월가 분석] 액티브 펀드 빅테크 차익실현", "source": "CNBC", "date": "10-04"}
+            ],
+            "metric": "• 비중 한도 도달에 따른 기계적 매도"
+        },
+        {
+            "name": "Apple (AAPL)",
+            "etfs": ["미국나스닥100액티브"],
+            "is_single_conviction": False,
+            "current": "4.2%",
+            "priceChange": 0.8,
+            "shareChange": -24.5,
+            "buy_date": "2026-09-28 ~ 10-05 (지속이탈)",
+            "consecutive_days": 0,
+            "intensity": evaluate_intensity(-24.5, 0),
+            "strategy": "exit_warning",
+            "strategyLabel": "엑시트 경보",
+            "actionGuide": "즉시 동반 매도",
+            "guideColor": "rose",
+            "reason": "최근 1주일간 수량 24.5% 대량 이탈.",
+            "news": [
+                {"title": "[WSJ] 중국 스마트폰 점유율 하락", "source": "WSJ", "date": "10-03"}
+            ],
+            "metric": "• 기관 수량 대량 축소"
         }
-      } catch (e) {
-        console.log("기본 내장 데이터로 렌더링합니다.");
-      } finally {
-        if (icon) icon.classList.remove('fa-spin');
-        renderTable();
-        if (showNotice) alert("동기화가 완료되었습니다.");
-      }
+    ]
+
+    output = {
+        "last_updated": now_str,
+        "stocks": master_stocks
     }
 
-    function filterStrategy(strat) {
-      if (currentStrategy === strat) {
-        currentStrategy = 'all';
-        document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
-      } else {
-        currentStrategy = strat;
-        document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
-        const activeCard = document.getElementById(`strat-${strat}`);
-        if (activeCard) activeCard.classList.add('ring-2', 'ring-white');
-      }
-      renderTable();
-    }
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, ensure_ascii=False, indent=2)
 
-    function filterCrossOnly() {
-      onlyCross = !onlyCross;
-      const btn = document.getElementById('crossOnlyBtn');
-      if (onlyCross) {
-        btn.className = 'text-xs px-3 py-1.5 rounded-lg border border-blue-400 bg-blue-600 text-white font-semibold transition flex items-center gap-1.5 shadow-md shadow-blue-500/30';
-      } else {
-        btn.className = 'text-xs px-3 py-1.5 rounded-lg border border-blue-500/40 bg-blue-950/30 text-blue-300 hover:bg-blue-900/40 font-semibold transition flex items-center gap-1.5';
-      }
-      renderTable();
-    }
+    print("✅ data.json 생성 완료!")
 
-    function resetFilters() {
-      currentStrategy = 'all';
-      onlyCross = false;
-      document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
-      const btn = document.getElementById('crossOnlyBtn');
-      btn.className = 'text-xs px-3 py-1.5 rounded-lg border border-blue-500/40 bg-blue-950/30 text-blue-300 hover:bg-blue-900/40 font-semibold transition flex items-center gap-1.5';
-      renderTable();
-    }
-
-    function renderTable() {
-      const tbody = document.getElementById('portfolioTableBody');
-      tbody.innerHTML = '';
-
-      let list = activeStockList;
-
-      if (currentStrategy !== 'all') {
-        list = list.filter(s => s.strategy === currentStrategy);
-      }
-      if (onlyCross) {
-        list = list.filter(s => s.etfs && s.etfs.length >= 2);
-      }
-
-      if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-500 text-xs">선택한 조건에 맞는 종목이 없습니다. [전체 보기]를 눌러보세요.</td></tr>`;
-        return;
-      }
-
-      list.forEach((stock) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-800/40 cursor-pointer transition';
-        tr.onclick = () => selectStock(stock);
-
-        const priceColor = stock.priceChange > 0 ? 'text-emerald-400' : 'text-rose-400';
-        const signPrice = stock.priceChange > 0 ? '+' : '';
-
-        const shareColor = stock.shareChange > 0 ? 'text-emerald-400' : 'text-rose-400';
-        const signShare = stock.shareChange > 0 ? '+' : '';
-
-        let guideBadge = 'bg-emerald-600 text-white';
-        if (stock.guideColor === 'blue') guideBadge = 'bg-blue-600 text-white';
-        if (stock.guideColor === 'amber') guideBadge = 'bg-amber-600 text-white';
-        if (stock.guideColor === 'rose') guideBadge = 'bg-rose-600 text-white font-bold animate-pulse';
-
-        const etfBadgeCount = stock.etfs ? stock.etfs.length : 1;
-        const crossBadge = etfBadgeCount >= 2 
-          ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/40 font-semibold ml-1.5">${etfBadgeCount}개 펀드 동시</span>` 
-          : '';
-
-        tr.innerHTML = `
-          <td class="py-3 px-3">
-            <div class="font-bold text-white text-sm flex items-center">${stock.name} ${crossBadge}</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">${stock.etfs ? stock.etfs.join(', ') : ''}</div>
-          </td>
-          <td class="py-3 px-2 text-right font-mono text-slate-200">${stock.current}</td>
-          <td class="py-3 px-2 text-right font-mono ${priceColor}">${signPrice}${stock.priceChange}%</td>
-          <td class="py-3 px-2 text-right font-mono ${shareColor} font-bold">${signShare}${stock.shareChange}%</td>
-          <td class="py-3 px-3 text-center">
-            <span class="px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${guideBadge}">
-              ${stock.actionGuide}
-            </span>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      if (list.length > 0) {
-        selectStock(list[0]);
-      }
-    }
-
-    function selectStock(stock) {
-      document.getElementById('aiCardStock').textContent = stock.name;
-      document.getElementById('aiCardEtfList').textContent = stock.etfs ? stock.etfs.join(' + ') : '';
-      document.getElementById('aiCardStrategyTag').textContent = stock.strategyLabel ? stock.strategyLabel.toUpperCase() : 'HOUSE VIEW';
-      document.getElementById('aiCardActionBadge').textContent = stock.actionGuide;
-      document.getElementById('aiCardReason').textContent = stock.reason;
-
-      const newsUl = document.getElementById('aiCardNewsList');
-      newsUl.innerHTML = '';
-      if (stock.news && stock.news.length > 0) {
-        stock.news.forEach(item => {
-          const li = document.createElement('li');
-          li.className = 'pt-2';
-          li.innerHTML = `
-            <div class="text-white hover:text-blue-300 font-medium leading-snug cursor-pointer">${item.title}</div>
-            <div class="text-[10px] text-slate-500 mt-0.5 flex gap-2">
-              <span class="text-indigo-400">${item.source}</span>
-              <span>•</span>
-              <span>${item.date}</span>
-            </div>
-          `;
-          newsUl.appendChild(li);
-        });
-      }
-
-      document.getElementById('aiCardMetric').innerText = stock.metric || "주요 지표 정상 범위 유지";
-    }
-
-    // Init
-    window.onload = () => loadLiveData();
-  </script>
-</body>
-</html>
+if __name__ == "__main__":
+    run_update()
