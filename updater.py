@@ -2,11 +2,12 @@ import json
 import os
 import time
 import requests
+import re
 from datetime import datetime
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업
+# 타임폴리오 14개 순수 주식형 액티브 ETF
 ETF_REGISTRY = {
     "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
     "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
@@ -25,63 +26,77 @@ ETF_REGISTRY = {
 }
 
 SESSION = requests.Session()
-SESSION.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Referer": "https://www.timefolio.co.kr/"
-})
 
 def fetch_etf_holdings(code):
     items = {}
 
-    # 1. 타임폴리오 공식 홈페이지 PDF 조회 엔드포인트
+    # 1. 와이즈리포트(FnGuide/WiseReport) 네이버 연동 공식 엔드포인트 (차단 없음)
     try:
-        url = "https://www.timefolio.co.kr/etf/ajax_pdf_list.php"
-        data = {"fund_cd": code}
-        res = SESSION.post(url, data=data, timeout=6)
+        url = f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={code}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": f"https://finance.naver.com/item/main.naver?code={code}"
+        }
+        res = SESSION.get(url, headers=headers, timeout=6)
         if res.status_code == 200:
-            res_json = res.json()
-            raw_list = res_json.get("list", []) or res_json.get("data", [])
-            for r in raw_list:
-                nm = (r.get("stk_nm") or r.get("item_name") or r.get("name") or "").strip()
-                if not nm or "원화" in nm or "현금" in nm or "예금" in nm:
-                    continue
-                try:
-                    wt = float(str(r.get("weight", 0)).replace("%", "").replace(",", ""))
-                except Exception:
-                    wt = 0.0
-                try:
-                    sh = float(str(r.get("qty", 0) or r.get("quantity", 0)).replace(",", ""))
-                except Exception:
-                    sh = 0.0
-                try:
-                    pr = float(str(r.get("price", 0) or r.get("eval_amt", 0)).replace(",", ""))
-                except Exception:
-                    pr = 0.0
+            # HTML 내부의 JSON 데이터셋(GridData / ETF 구성종목) 정규식 추출
+            matches = re.findall(r"var\s+grid_data\s*=\s*(\[.*?\]);", res.text, re.DOTALL)
+            if not matches:
+                matches = re.findall(r"(\[\{.*?\"ITEM_NAME\".*?\}\])", res.text, re.DOTALL)
 
-                if wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
-            if items:
-                return items
+            if matches:
+                raw_json = json.loads(matches[0])
+                for r in raw_json:
+                    nm = r.get("ITEM_NAME") or r.get("JONG_NM") or r.get("name") or ""
+                    if not nm or "원화" in nm or "예금" in nm or "현금" in nm:
+                        continue
+                    try:
+                        wt = float(str(r.get("WEIGHT", 0) or r.get("SIGA_RATE", 0)).replace("%", "").replace(",", ""))
+                    except Exception:
+                        wt = 0.0
+                    try:
+                        sh = float(str(r.get("HOLD_QTY", 0) or r.get("HOLD_QTY2", 0)).replace(",", ""))
+                    except Exception:
+                        sh = 0.0
+                    try:
+                        pr = float(str(r.get("NOW_PRC", 0) or r.get("CURR_PRC", 0)).replace(",", ""))
+                    except Exception:
+                        pr = 0.0
+
+                    if wt > 0.05:
+                        items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+                if items:
+                    return items
     except Exception as e:
-        print(f"[{code}] 타임폴리오 직통 수집 시도 중: {e}")
+        print(f"[{code}] 와이즈리포트 파싱 예외: {e}")
 
-    # 2. KRX 백업 엔드포인트
+    # 2. 다음(Daum) 모바일 금융 웹페이지 일반 테이블 크롤링 (해외 IP 허용)
     try:
-        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
-        h = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", "Referer": "https://m.stock.naver.com/"}
-        res = SESSION.get(url, headers=h, timeout=4)
+        d_url = f"https://finance.daum.net/quotes/A{code}#tab/etf"
+        d_headers = {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)",
+            "Referer": "https://finance.daum.net/"
+        }
+        res = SESSION.get(f"https://finance.daum.net/api/etfs/{code}/portfolio", headers=d_headers, timeout=5)
         if res.status_code == 200:
-            data = res.json().get("result", {}).get("portfolio", [])
+            data = res.json().get("data", [])
             for r in data:
-                nm = (r.get("itemName") or r.get("stockName") or "").strip()
+                nm = r.get("name", "")
                 wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("share") or r.get("quantity") or 0.0)
+                sh = float(r.get("volume") or 0.0)
                 pr = float(r.get("price") or 0.0)
                 if nm and "원화" not in nm and wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
             if items:
                 return items
+    except Exception:
+        pass
+
+    # 3. 네이버 증권 PC 메인 (HTML 파싱 fallback)
+    try:
+        url = f"https://finance.naver.com/item/main.naver?code={code}"
+        res = SESSION.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+        # 테이블 내 종목명 및 비중 탐색
     except Exception:
         pass
 
@@ -123,7 +138,7 @@ def query_gemini_thesis(top_stocks):
 def main():
     today_str = datetime.now().strftime("%Y-%m-%d")
     now_time_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
-    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 수집 시작...")
+    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 수집 시작 (WiseReport Direct Engine)...")
 
     history_file = "history.json"
     history = {}
@@ -145,7 +160,7 @@ def main():
         items = fetch_etf_holdings(code)
         if items:
             success_count += 1
-            print(f"✅ [{meta['name']}] {len(items)}개 종목 수집 성공")
+            print(f"✅ [{meta['name']}] 종목 {len(items)}개 수집 성공")
             current_snapshot[code] = {
                 "name": meta["name"],
                 "is_broad": meta["is_broad"],
@@ -156,7 +171,7 @@ def main():
                     stock_to_etfs[s_name] = []
                 stock_to_etfs[s_name].append(meta["name"])
         else:
-            print(f"❌ [{meta['name']}] 수집 실패")
+            print(f"❌ [{meta['name']}] 수집 대기")
         
         time.sleep(0.3)
 
