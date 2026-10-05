@@ -1,4 +1,245 @@
 {
-  "last_updated": "2026-10-05 14:02 기준",
-  "stocks": []
+  "last_updated": "2026-10-05 14:07 기준",
+  "stocks": [
+    {
+      "name": "삼성전자",
+      "etfs": [
+        "TIME 코스피플러스액티브"
+      ],
+      "etfKey": "385550",
+      "is_single_conviction": true,
+      "current": "14.20%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 코스피플러스액티브 편입 비중 14.20%.",
+      "news": [
+        {
+          "title": "[삼성전자] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "SK하이닉스",
+      "etfs": [
+        "TIME 코스피플러스액티브"
+      ],
+      "etfKey": "385550",
+      "is_single_conviction": true,
+      "current": "11.50%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 코스피플러스액티브 편입 비중 11.50%.",
+      "news": [
+        {
+          "title": "[SK하이닉스] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "NVIDIA CORP",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "etfKey": "433540",
+      "is_single_conviction": true,
+      "current": "9.80%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 미국나스닥100액티브 편입 비중 9.80%.",
+      "news": [
+        {
+          "title": "[NVIDIA CORP] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "MICROSOFT CORP",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "etfKey": "433540",
+      "is_single_conviction": true,
+      "current": "7.40%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 미국나스닥100액티브 편입 비중 7.40%.",
+      "news": [
+        {
+          "title": "[MICROSOFT CORP] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "APPLE INC",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "etfKey": "433540",
+      "is_single_conviction": true,
+      "current": "6.80%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 미국나스닥100액티브 편입 비중 6.80%.",
+      "news": [
+        {
+          "title": "[APPLE INC] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "BROADCOM INC",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "etfKey": "433540",
+      "is_single_conviction": true,
+      "current": "4.50%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 미국나스닥100액티브 편입 비중 4.50%.",
+      "news": [
+        {
+          "title": "[BROADCOM INC] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "MICRON TECHNOLOGY",
+      "etfs": [
+        "TIME 미국나스닥100액티브"
+      ],
+      "etfKey": "433540",
+      "is_single_conviction": true,
+      "current": "4.20%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 미국나스닥100액티브 편입 비중 4.20%.",
+      "news": [
+        {
+          "title": "[MICRON TECHNOLOGY] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    },
+    {
+      "name": "두산에너빌리티",
+      "etfs": [
+        "TIME 코스피플러스액티브"
+      ],
+      "etfKey": "385550",
+      "is_single_conviction": true,
+      "current": "3.80%",
+      "priceChange": 0.0,
+      "shareChange": 0.0,
+      "buy_date": "보합/관망",
+      "consecutive_days": 0,
+      "intensity": {
+        "level": 0,
+        "badge": "분할 차익실현",
+        "color": "amber"
+      },
+      "strategy": "single_conviction",
+      "strategyLabel": "지수형 단독 승부주",
+      "actionGuide": "단독 승부 (25~30%)",
+      "guideColor": "purple",
+      "reason": "실제 타임폴리오 장부 기준 TIME 코스피플러스액티브 편입 비중 3.80%.",
+      "news": [
+        {
+          "title": "[두산에너빌리티] 타임폴리오 실제 PDF 편입 확인",
+          "source": "TIME 자산운용",
+          "date": "2026-10-05"
+        }
+      ]
+    }
+  ]
 }
