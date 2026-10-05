@@ -1,32 +1,3 @@
-{
-  "total_etfs_tracked": 0,
-  "tracked_etfs": [],
-  "stocks": []
-}
-```[span_1](start_span)[span_1](end_span)
-
-이 결과가 의미하는 것은 다음과 같습니다:
-1. **GitHub Actions 실행 및 자동 저장 기능은 완벽히 정상 동작**하고 있습니다 (github-actions[bot]이 `data.json`을 잘 커밋하고 있습니다)[span_2](start_span)[span_2](end_span).
-2. 하지만 `total_etfs_tracked: 0`이라는 것은, 파이썬이 네이버와 타임폴리오 웹페이지에 접속을 시도했으나 **17개 ETF 요청이 단 1개도 빠짐없이 100% 전부 차단/실패**하여 빈 껍데기만 남았다는 뜻입니다[span_3](start_span)[span_3](end_span).
-3. 그 결과 `stocks: []`로 파일이 비어 있으니, 웹페이지(`index.html`)는 어쩔 수 없이 옛날에 적어둔 **가짜 샘플(GEV, Bloom Energy)**을 화면에 띄우고 있었던 것입니다[span_4](start_span)[span_4](end_span).
-
----
-
-### 왜 해외 GitHub 서버에서 네이버/타임폴리오가 100% 막힐까요?
-
-네이버와 타임폴리오 웹서버는 **데이터센터(AWS, Azure, GitHub 등) 해외 클라우드 IP의 크롤링을 완전히 차단**하고 있습니다. 일반적인 `requests.get()` 방식으로는 절대 데이터를 뚫고 들어갈 수 없습니다.
-
-반면, 한국거래소 공식 공공 데이터 망이나 **국내 오픈 금융 엔드포인트(공식 모바일 웹 뷰어 및 포털 API)**는 정식 헤더 규격만 맞추면 IP 차단 없이 **실제 17개 ETF의 주식 종목, 수량, 비중**을 깨끗하게 내려줍니다.
-
----
-
-### 해결책: 차단 없는 오픈 엔드포인트로 `updater.py` 교체
-
-네이버 모바일 주식 상세 API의 오픈 패스(`[https://m.stock.naver.com/front-api/v1/etf/portfolio](https://m.stock.naver.com/front-api/v1/etf/portfolio)`)와 다음 금융의 오픈 엔드포인트를 결합하여, **GitHub Actions 환경에서도 차단 없이 실제 데이터를 긁어오도록 통신 계층을 전면 교체한 코드**입니다.
-
-GitHub 저장소에서 **`updater.py`** 파일을 열고 아래 코드로 **전체 덮어쓰기(Commit changes)** 해주세요.
-
-```python
 import json
 import os
 import requests
@@ -34,7 +5,7 @@ from datetime import datetime
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# 1. 타임폴리오 17개 주식형 ETF 단축코드
+# 타임폴리오 17개 주식형 ETF 단축코드
 ETF_REGISTRY = {
     "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
     "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
@@ -57,12 +28,9 @@ ETF_REGISTRY = {
 SESSION = requests.Session()
 
 def fetch_real_holdings(code):
-    """
-    해외 IP 차단을 뚫기 위한 3중 우회 수집 엔드포인트
-    """
     items = {}
 
-    # 방법 A: 네이버 모바일 오픈 엔드포인트 (Referer & Device 모사)
+    # 방법 A: 네이버 모바일 오픈 엔드포인트
     try:
         url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
         headers = {
@@ -85,7 +53,7 @@ def fetch_real_holdings(code):
     except Exception:
         pass
 
-    # 방법 B: 네이버 통합 API (구버전 fallback)
+    # 방법 B: 네이버 통합 API (구버전)
     try:
         url = f"https://m.stock.naver.com/api/stock/{code}/etf/portfolio"
         headers = {
@@ -106,7 +74,7 @@ def fetch_real_holdings(code):
     except Exception:
         pass
 
-    # 방법 C: 다음 금융 오픈 ETF 포트폴리오 엔드포인트
+    # 방법 C: 다음 금융 오픈 ETF 포트폴리오
     try:
         url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
         headers = {
