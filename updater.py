@@ -1,45 +1,49 @@
 import json
 import os
+import time
 import requests
 from datetime import datetime
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# 타임폴리오 17개 주식형 액티브 ETF
+# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업 (정규 6자리 코드)
 ETF_REGISTRY = {
-    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
-    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
-    "0113D0": {"name": "TIME 글로벌탑픽액티브", "is_broad": True},
+    # 1. 국내 대표 지수 & 밸류업 (코스닥액티브 400570 정식 포함)
     "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
     "400580": {"name": "TIME 코스피액티브", "is_broad": True},
+    "400570": {"name": "TIME 코스닥액티브", "is_broad": True},
     "495060": {"name": "TIME 코리아밸류업액티브", "is_broad": True},
+
+    # 2. 미국 대표 지수 (알파 승부주 타깃)
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
+
+    # 3. 국내 특화 섹터/테마
     "404120": {"name": "TIME K신재생에너지액티브", "is_broad": False},
     "449180": {"name": "TIME K바이오액티브", "is_broad": False},
     "449190": {"name": "TIME K-이노베이션액티브", "is_broad": False},
     "432320": {"name": "TIME K컬처액티브", "is_broad": False},
+
+    # 4. 글로벌 핵심 테마 (방산, AI, 소부장, 소비)
     "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False},
-    "0185L0": {"name": "TIME 글로벌휴머노이드로봇산업액티브", "is_broad": False},
     "478150": {"name": "TIME 글로벌우주테크&방산액티브", "is_broad": False},
-    "0043Y0": {"name": "TIME 차이나AI테크액티브", "is_broad": False},
     "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False},
     "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False}
 }
 
 SESSION = requests.Session()
+SESSION.headers.update({
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
+    "Referer": "https://m.stock.naver.com/",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "ko-KR,ko;q=0.9"
+})
 
-def fetch_real_holdings(code):
+def fetch_etf_holdings(code):
+    url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
     items = {}
-
-    # 1. 네이버 금융 모바일 백엔드 API (Referer 우회 세션 규격)
     try:
-        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
-            "Referer": "https://m.stock.naver.com/",
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "ko-KR,ko;q=0.9"
-        }
-        res = SESSION.get(url, headers=headers, timeout=5)
+        res = SESSION.get(url, timeout=5)
         if res.status_code == 200:
             data = res.json().get("result", {}).get("portfolio", [])
             for r in data:
@@ -47,42 +51,10 @@ def fetch_real_holdings(code):
                 wt = float(r.get("weight") or 0.0)
                 sh = float(r.get("share") or r.get("quantity") or 0.0)
                 pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and "예금" not in nm and "현금" not in nm and wt > 0.05:
+                if nm and "원화" not in nm and "현금" not in nm and "예금" not in nm and wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
-            if items:
-                return items
-    except Exception:
-        pass
-
-    # 2. 증권 포털 오픈 피드 (금융위원회/SEIBro 미러링)
-    try:
-        url = f"https://finance.daum.net/content/sub/etfs/{code}/portfolio.daum"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Referer": "https://finance.daum.net/"
-        }
-        res = SESSION.get(url, headers=headers, timeout=5)
-        if res.status_code == 200:
-            for r in res.json().get("data", []):
-                nm = r.get("name")
-                wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("volume") or 0.0)
-                pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
-            if items:
-                return items
-    except Exception:
-        pass
-
-    # 3. KSD 증권정보포털 공공 오픈 엔드포인트
-    try:
-        url = f"https://seibro.or.kr/websquare/engine/servlet/export.jsp"
-        res = SESSION.get(f"https://api.finance.naver.com/service/itemSummary.nhn?itemcode={code}", timeout=5)
-        # 네이버 구형 요약 API 응답 검증
-    except Exception:
-        pass
-
+    except Exception as e:
+        print(f"[{code}] 조회 오류: {e}")
     return items
 
 def query_gemini_thesis(top_stocks):
@@ -97,7 +69,7 @@ def query_gemini_thesis(top_stocks):
     {chr(10).join(summary)}
 
     각 종목의 최근 IR 공시, 실적, 수주 뉴스를 바탕으로 운용역 매수 가설(Thesis)을 추론하라.
-    반드시 다음 JSON 형식(키는 종목명 그대로)으로만 한국어로 답변하라:
+    반드시 다음 JSON 형식(키는 종목명 그대로)으로만 한국어로 작성하라:
     {{
       "종목명": {{
         "reason": "핵심 투자 가설 (2~3문장)",
@@ -121,7 +93,7 @@ def query_gemini_thesis(top_stocks):
 def main():
     today_str = datetime.now().strftime("%Y-%m-%d")
     now_time_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
-    print(f"[{now_time_str}] 타임폴리오 17개 ETF 실데이터 수집 시작...")
+    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 수집 시작...")
 
     history_file = "history.json"
     history = {}
@@ -140,10 +112,10 @@ def main():
     success_count = 0
 
     for code, meta in ETF_REGISTRY.items():
-        items = fetch_real_holdings(code)
+        items = fetch_etf_holdings(code)
         if items:
             success_count += 1
-            print(f"✅ [{meta['name']}] 실제 종목 {len(items)}개 수집 성공")
+            print(f"✅ [{meta['name']}] {len(items)}개 종목 수집 성공")
             current_snapshot[code] = {
                 "name": meta["name"],
                 "is_broad": meta["is_broad"],
@@ -155,8 +127,11 @@ def main():
                 stock_to_etfs[s_name].append(meta["name"])
         else:
             print(f"❌ [{meta['name']}] 수집 대기")
+        
+        # IP 차단 방지를 위한 0.5초 대기
+        time.sleep(0.5)
 
-    print(f"📊 총 17개 중 {success_count}개 펀드 실제 장부 추출 완료!")
+    print(f"📊 총 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
 
     all_analyzed = []
 
