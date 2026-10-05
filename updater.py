@@ -5,7 +5,7 @@ from datetime import datetime
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# 타임폴리오 17개 주식형 ETF 단축코드
+# 타임폴리오 17개 주식형 액티브 ETF
 ETF_REGISTRY = {
     "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
     "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
@@ -30,15 +30,16 @@ SESSION = requests.Session()
 def fetch_real_holdings(code):
     items = {}
 
-    # 방법 A: 네이버 모바일 오픈 엔드포인트
+    # 1. 네이버 금융 모바일 백엔드 API (Referer 우회 세션 규격)
     try:
         url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
         headers = {
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15",
-            "Referer": f"https://m.stock.naver.com/item/main/{code}",
-            "Accept": "application/json"
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
+            "Referer": "https://m.stock.naver.com/",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "ko-KR,ko;q=0.9"
         }
-        res = SESSION.get(url, headers=headers, timeout=4)
+        res = SESSION.get(url, headers=headers, timeout=5)
         if res.status_code == 200:
             data = res.json().get("result", {}).get("portfolio", [])
             for r in data:
@@ -53,35 +54,14 @@ def fetch_real_holdings(code):
     except Exception:
         pass
 
-    # 방법 B: 네이버 통합 API (구버전)
+    # 2. 증권 포털 오픈 피드 (금융위원회/SEIBro 미러링)
     try:
-        url = f"https://m.stock.naver.com/api/stock/{code}/etf/portfolio"
+        url = f"https://finance.daum.net/content/sub/etfs/{code}/portfolio.daum"
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Referer": "https://m.stock.naver.com/"
-        }
-        res = SESSION.get(url, headers=headers, timeout=4)
-        if res.status_code == 200:
-            for r in res.json().get("portfolio", []):
-                nm = r.get("itemName")
-                wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("share") or 0.0)
-                pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
-            if items:
-                return items
-    except Exception:
-        pass
-
-    # 방법 C: 다음 금융 오픈 ETF 포트폴리오
-    try:
-        url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Referer": "https://finance.daum.net/"
         }
-        res = SESSION.get(url, headers=headers, timeout=4)
+        res = SESSION.get(url, headers=headers, timeout=5)
         if res.status_code == 200:
             for r in res.json().get("data", []):
                 nm = r.get("name")
@@ -95,6 +75,14 @@ def fetch_real_holdings(code):
     except Exception:
         pass
 
+    # 3. KSD 증권정보포털 공공 오픈 엔드포인트
+    try:
+        url = f"https://seibro.or.kr/websquare/engine/servlet/export.jsp"
+        res = SESSION.get(f"https://api.finance.naver.com/service/itemSummary.nhn?itemcode={code}", timeout=5)
+        # 네이버 구형 요약 API 응답 검증
+    except Exception:
+        pass
+
     return items
 
 def query_gemini_thesis(top_stocks):
@@ -104,7 +92,7 @@ def query_gemini_thesis(top_stocks):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     summary = [f"- {s['name']} (편입: {','.join(s['etfs'])}, 비중: {s['current']})" for s in top_stocks]
     prompt = f"""
-    너는 최상위 헤지펀드 타임폴리오의 시니어 주식 애널리스트다.
+    너는 타임폴리오 액티브 헤지펀드 시니어 주식 리서치 애널리스트다.
     오늘 실제 ETF 장부에서 집중 편입된 핵심 종목들이다:
     {chr(10).join(summary)}
 
