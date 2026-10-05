@@ -1,177 +1,430 @@
-import json
-import os
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIMEFOLIO 액티브 포지션 & 매수 강도 레이더</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap');
+    body { font-family: 'Pretendard', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
 
-# 1. TIME 액티브 ETF 분류 (지수형 vs 섹터/테마형 구분)
-ETF_REGISTRY = {
-    # 대표 지수형 액티브 (자유로운 알파 편입 가능 -> 가중치 최상)
-    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
-    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
-    "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
-    "400580": {"name": "TIME 코스피액티브", "is_broad": True},
-    "KOSDAQ": {"name": "TIME 코스닥액티브", "is_broad": True},
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-500 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-blue-500/20">TF</div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          타임폴리오 ETF 매수 강도 & 단독 승부주 레이더
+          <span class="text-[11px] font-normal px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Intensity & Date Tracker</span>
+        </h1>
+        <p class="text-xs text-slate-400">지수형 펀드 단독 승부주 포착 · 최근 매수 일자 및 수량 매집 강도(Lv.1~Lv.5) 추적</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <span class="text-xs text-slate-400 hidden sm:inline" id="lastUpdated">최근 수집: 동기화 중...</span>
+      <button onclick="loadLiveData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
+        <i class="fa-solid fa-arrows-rotate text-blue-400" id="syncIcon"></i> PDF 동기화
+      </button>
+    </div>
+  </header>
 
-    # 특정 섹터/테마 ETF (업종 의무 편입으로 단독 승부주 판별 시 제외)
-    "432320": {"name": "TIME K컬처액티브", "is_broad": False},
-    "465600": {"name": "TIME 글로벌인공지능액티브", "is_broad": False},
-    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
-    "449180": {"name": "TIME 바이오액티브", "is_broad": False}
-}
+  <div class="max-w-7xl mx-auto px-6 pt-5">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <button onclick="filterStrategy('single_conviction')" id="strat-single_conviction" class="strat-card p-3 rounded-xl border border-purple-500/40 bg-purple-950/20 text-left hover:border-purple-400 transition">
+        <div class="flex items-center justify-between text-xs text-purple-400 font-bold mb-1">
+          <span>★ 단독 승부주 (블룸에너지형)</span>
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <div class="text-sm font-bold text-white">지수형 ETF 단독 집중편입</div>
+        <div class="text-[11px] text-purple-300/80 mt-1">테마 의무편입 배제 / 알파 1위</div>
+      </button>
 
-def evaluate_intensity(share_change, consecutive_days):
-    """매수 강도 및 레벨 판별 (1~5단계)"""
-    if share_change >= 40.0:
-        return {"level": 5, "badge": "초강력 집중 매집 (Lv.5)", "color": "purple"}
-    elif share_change >= 25.0:
-        return {"level": 4, "badge": "적극 공격 매수 (Lv.4)", "color": "emerald"}
-    elif share_change >= 12.0:
-        return {"level": 3, "badge": "계단식 분할 매수 (Lv.3)", "color": "blue"}
-    elif share_change >= 5.0:
-        return {"level": 2, "badge": "안정적 비중 확대 (Lv.2)", "color": "slate"}
-    elif share_change > 0.0:
-        return {"level": 1, "badge": "정찰병 진입 (Lv.1)", "color": "slate"}
-    elif share_change <= -15.0:
-        return {"level": 0, "badge": "대량 엑시트/탈출", "color": "rose"}
-    else:
-        return {"level": 0, "badge": "분할 차익실현", "color": "amber"}
+      <button onclick="filterStrategy('house_pick')" id="strat-house_pick" class="strat-card p-3 rounded-xl border border-blue-500/40 bg-blue-950/20 text-left hover:border-blue-400 transition">
+        <div class="flex items-center justify-between text-xs text-blue-400 font-bold mb-1">
+          <span>① 하우스 압축픽</span>
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="text-sm font-bold text-white">복수 펀드 동시 매집</div>
+        <div class="text-[11px] text-slate-400 mt-1">포트폴리오 핵심 (30~40%)</div>
+      </button>
 
-def run_update():
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M 기준")
+      <button onclick="filterStrategy('passive_drift')" id="strat-passive_drift" class="strat-card p-3 rounded-xl border border-amber-500/30 bg-amber-950/20 text-left hover:border-amber-400 transition">
+        <div class="flex items-center justify-between text-xs text-amber-400 font-bold mb-1">
+          <span>② 고점 착시 (주의)</span>
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </div>
+        <div class="text-sm font-bold text-white">주가 급등 + 수량 축소</div>
+        <div class="text-[11px] text-amber-300/80 mt-1">매수 금지 / 분할 익절</div>
+      </button>
 
-    # 가공된 마스터 포지션 데이터
-    master_stocks = [
-        {
-            "name": "Bloom Energy (BE)",
-            "etfs": ["미국나스닥100액티브"],
-            "is_single_conviction": True,  # 중복되지 않았으나 지수형 펀드에서 단독 집중한 종목
-            "current": "4.6%",
-            "priceChange": 18.5,
-            "shareChange": 54.0,
-            "buy_date": "2026-10-02 ~ 10-05",
-            "consecutive_days": 4,
-            "intensity": evaluate_intensity(54.0, 4),
-            "strategy": "single_conviction",
-            "strategyLabel": "지수형 단독 승부주",
-            "actionGuide": "적극 매수 (30%)",
-            "guideColor": "emerald",
-            "reason": "나스닥100 지수(0%) 및 타 테마 펀드에는 없으나, 나스닥액티브 매니저가 단독으로 수량을 +54% 집중 매수하여 포트폴리오 4위권으로 급격히 끌어올림. AI 데이터센터용 SOFC(고체산화물 연료전지) 전력 직결 공급 계약에 베팅.",
-            "news": [
-                {"title": "[단독] 블룸에너지, 美 대형 AI 데이터센터에 50MW급 SOFC 수주 체결", "source": "Bloomberg", "date": "10-03"},
-                {"title": "[리포트] 전력망 대기 시간 없이 즉시 발전 가능한 SOFC 프리미엄 부각", "source": "모건스탠리", "date": "10-04"}
-            ],
-            "metric": "• 최근 4영업일 연속 수량 순매수 확인\n• 단독 비중 0% → 4.6% 수직 상승"
-        },
-        {
-            "name": "Micron Technology (MU)",
-            "etfs": ["미국나스닥100액티브", "글로벌인공지능액티브"],
-            "is_single_conviction": False,
-            "current": "5.8%",
-            "priceChange": 4.2,
-            "shareChange": 28.5,
-            "buy_date": "2026-09-30 ~ 10-05",
-            "consecutive_days": 5,
-            "intensity": evaluate_intensity(28.5, 5),
-            "strategy": "house_pick",
-            "strategyLabel": "하우스 압축픽",
-            "actionGuide": "적극 매수 (40%)",
-            "guideColor": "emerald",
-            "reason": "나스닥100과 글로벌AI 2개 펀드가 동시에 주식 수를 +28.5% 매집. 5영업일 연속 매수세 유입.",
-            "news": [
-                {"title": "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과", "source": "블룸버그", "date": "10-03"}
-            ],
-            "metric": "• 5일 연속 순매수\n• 2개 펀드 동시 오버웨이트"
-        },
-        {
-            "name": "GE Vernova (GEV)",
-            "etfs": ["미국나스닥100액티브"],
-            "is_single_conviction": True,
-            "current": "4.1%",
-            "priceChange": 6.8,
-            "shareChange": 45.0,
-            "buy_date": "2026-10-01 ~ 10-05",
-            "consecutive_days": 3,
-            "intensity": evaluate_intensity(45.0, 3),
-            "strategy": "single_conviction",
-            "strategyLabel": "지수형 단독 승부주",
-            "actionGuide": "수급 편승 (20%)",
-            "guideColor": "emerald",
-            "reason": "나스닥 벤치마크 지수(0%)에 전무한 종목이나 단독으로 3일 만에 수량 45% 추가 매집.",
-            "news": [
-                {"title": "[외신] 美 데이터센터 가스터빈 예약 2029년 마감", "source": "로이터", "date": "10-02"}
-            ],
-            "metric": "• 3일 만에 수량 45% 확보"
-        },
-        {
-            "name": "두산에너빌리티 (034020)",
-            "etfs": ["코스피플러스액티브", "코스피액티브"],
-            "is_single_conviction": False,
-            "current": "4.2%",
-            "priceChange": 3.5,
-            "shareChange": 42.0,
-            "buy_date": "2026-09-29 ~ 10-05",
-            "consecutive_days": 6,
-            "intensity": evaluate_intensity(42.0, 6),
-            "strategy": "house_pick",
-            "strategyLabel": "하우스 압축픽",
-            "actionGuide": "적극 매수 (30%)",
-            "guideColor": "emerald",
-            "reason": "국내 대표 지수 펀드 2곳에서 6영업일간 쉬지 않고 총 42% 매집.",
-            "news": [
-                {"title": "[공시] 체코 두코바니 본계약 협상단 파견", "source": "DART", "date": "10-04"}
-            ],
-            "metric": "• 체코 수주 가시화"
-        },
-        {
-            "name": "NVIDIA (NVDA)",
-            "etfs": ["미국나스닥100액티브"],
-            "is_single_conviction": False,
-            "current": "12.5%",
-            "priceChange": 14.8,
-            "shareChange": -3.2,
-            "buy_date": "2026-10-02 (분할매도)",
-            "consecutive_days": 0,
-            "intensity": evaluate_intensity(-3.2, 0),
-            "strategy": "passive_drift",
-            "strategyLabel": "고점 착시",
-            "actionGuide": "매수 금지 / 분할 익절",
-            "guideColor": "amber",
-            "reason": "주가 급등 속에서 수량 3.2% 매도 출회.",
-            "news": [
-                {"title": "[월가 분석] 액티브 펀드 빅테크 차익실현", "source": "CNBC", "date": "10-04"}
-            ],
-            "metric": "• 비중 한도 도달에 따른 기계적 매도"
-        },
-        {
-            "name": "Apple (AAPL)",
-            "etfs": ["미국나스닥100액티브"],
-            "is_single_conviction": False,
-            "current": "4.2%",
-            "priceChange": 0.8,
-            "shareChange": -24.5,
-            "buy_date": "2026-09-28 ~ 10-05 (지속이탈)",
-            "consecutive_days": 0,
-            "intensity": evaluate_intensity(-24.5, 0),
-            "strategy": "exit_warning",
-            "strategyLabel": "엑시트 경보",
-            "actionGuide": "즉시 동반 매도",
-            "guideColor": "rose",
-            "reason": "최근 1주일간 수량 24.5% 대량 이탈.",
-            "news": [
-                {"title": "[WSJ] 중국 스마트폰 점유율 하락", "source": "WSJ", "date": "10-03"}
-            ],
-            "metric": "• 기관 수량 대량 축소"
+      <button onclick="filterStrategy('exit_warning')" id="strat-exit_warning" class="strat-card p-3 rounded-xl border border-rose-500/30 bg-rose-950/20 text-left hover:border-rose-400 transition">
+        <div class="flex items-center justify-between text-xs text-rose-400 font-bold mb-1">
+          <span>③ 엑시트 경보</span>
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="text-sm font-bold text-white">수량 급감 / 전량 매도</div>
+        <div class="text-[11px] text-rose-400 mt-1">보유자 즉시 동반 매도</div>
+      </button>
+    </div>
+  </div>
+
+  <main class="max-w-7xl mx-auto p-6 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <div class="lg:col-span-7 bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col">
+        <div class="flex flex-wrap justify-between items-center gap-3 mb-4 pb-3 border-b border-slate-800/80">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-emerald-400"></i> 포지션 매수 일자 & 강도 모니터
+            </h2>
+            <p class="text-xs text-slate-400">최근 언제 어떤 강도(레벨)로 주식을 쓸어 담았는지 확인하세요.</p>
+          </div>
+
+          <button onclick="resetFilters()" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white font-medium transition">
+            필터 초기화 (전체)
+          </button>
+        </div>
+
+        <div class="overflow-x-auto flex-1">
+          <table class="w-full text-left text-sm">
+            <thead class="text-xs uppercase bg-slate-950/90 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-3">종목명 (편입 펀드)</th>
+                <th class="py-3 px-2 text-right">비중</th>
+                <th class="py-3 px-2 text-right">수량증감(ΔQ)</th>
+                <th class="py-3 px-2 text-center">최근 매수일</th>
+                <th class="py-3 px-3 text-center">매수 강도</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60" id="portfolioTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 bg-slate-900/70 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm shadow-md">
+                <i class="fa-solid fa-stopwatch"></i>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white">매수 집행 내역 & AI 분석</h3>
+                <p class="text-[11px] text-slate-400">집중 매수 기간 · 매수 강도 상세 진단</p>
+              </div>
+            </div>
+            <span class="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 font-mono border border-purple-500/30" id="aiCardStrategyTag">CONVICTION</span>
+          </div>
+
+          <div class="flex items-baseline justify-between mb-3">
+            <div>
+              <span class="text-xl font-black text-white" id="aiCardStock">Bloom Energy (BE)</span>
+              <span class="text-xs text-purple-400 ml-2 font-medium" id="aiCardEtfList">미국나스닥100 단독 편입</span>
+            </div>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300" id="aiCardActionBadge">적극 매수 (30%)</span>
+          </div>
+
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-indigo-500/30 space-y-2 mb-3">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">집중 매수 기간</span>
+              <span class="font-mono text-indigo-300 font-bold" id="aiCardDate">2026-10-02 ~ 10-05</span>
+            </div>
+            <div class="flex justify-between items-center text-xs border-t border-slate-800/80 pt-1.5">
+              <span class="text-slate-400">매수 강도 수준</span>
+              <span class="font-bold text-emerald-400" id="aiCardIntensity">초강력 집중 매집 (Lv.5)</span>
+            </div>
+            <div class="flex justify-between items-center text-xs border-t border-slate-800/80 pt-1.5">
+              <span class="text-slate-400">연속 매집 일수</span>
+              <span class="font-mono text-slate-200" id="aiCardConsecutive">4영업일 연속 순매수</span>
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 mb-3">
+            <div class="text-xs font-bold text-purple-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-lightbulb"></i> 운용역 매수 배경 유추
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed" id="aiCardReason">
+              종목을 선택하시면 상세 매매 근거와 가설이 표시됩니다.
+            </p>
+          </div>
+
+          <div class="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2 mb-3">
+            <div class="text-xs font-bold text-blue-400 flex items-center justify-between">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-file-lines"></i> 참고한 최근 기사 / IR 공시</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2 divide-y divide-slate-900 pt-1" id="aiCardNewsList">
+            </ul>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+          <span>분석 엔진: 지수형 단독 승부주 & 타이밍 레이더</span>
+          <span class="text-purple-400 font-mono">Intensity Engine v5.0</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const defaultData = [
+      {
+        name: "Bloom Energy (BE)",
+        etfs: ["미국나스닥100액티브"],
+        is_single_conviction: true,
+        current: "4.6%",
+        priceChange: 18.5,
+        shareChange: 54.0,
+        buy_date: "10-02 ~ 10-05",
+        consecutive_days: 4,
+        intensity: { level: 5, badge: "초강력 집중 매집 (Lv.5)", color: "purple" },
+        strategy: "single_conviction",
+        strategyLabel: "지수형 단독 승부주",
+        actionGuide: "적극 매수 (30%)",
+        guideColor: "emerald",
+        reason: "나스닥100 벤치마크 지수(0%)에 없으며 다른 테마 펀드와 중복되지 않은 순수 단독 종목. 나스닥액티브 매니저가 4영업일 연속 수량을 +54% 쓸어담아 4위권 비중으로 급격히 구축함. AI 데이터센터 직결 SOFC(연료전지) 전력 수주를 겨냥한 최고 확신 승부수.",
+        news: [
+          { title: "[단독] 블룸에너지, 美 대형 AI 데이터센터에 50MW급 SOFC 수주", source: "블룸버그", date: "10-03" },
+          { title: "[리포트] 전력망 병목 없는 즉시 분산 발전 프리미엄 부각", source: "모건스탠리", date: "10-04" }
+        ]
+      },
+      {
+        name: "Micron Technology (MU)",
+        etfs: ["미국나스닥100액티브", "글로벌인공지능액티브"],
+        is_single_conviction: false,
+        current: "5.8%",
+        priceChange: 4.2,
+        shareChange: 28.5,
+        buy_date: "09-30 ~ 10-05",
+        consecutive_days: 5,
+        intensity: { level: 4, badge: "적극 공격 매수 (Lv.4)", color: "emerald" },
+        strategy: "house_pick",
+        strategyLabel: "하우스 압축픽",
+        actionGuide: "적극 매수 (40%)",
+        guideColor: "emerald",
+        reason: "나스닥100과 글로벌AI 2개 펀드가 동시에 주식 수를 +28.5% 공격 매수. 5일 연속 매집세 확인.",
+        news: [
+          { title: "[단독] 마이크론, HBM3E 12단 빅테크 퀄 통과", source: "블룸버그", date: "10-03" }
+        ]
+      },
+      {
+        name: "GE Vernova (GEV)",
+        etfs: ["미국나스닥100액티브"],
+        is_single_conviction: true,
+        current: "4.1%",
+        priceChange: 6.8,
+        shareChange: 45.0,
+        buy_date: "10-01 ~ 10-05",
+        consecutive_days: 3,
+        intensity: { level: 5, badge: "초강력 집중 매집 (Lv.5)", color: "purple" },
+        strategy: "single_conviction",
+        strategyLabel: "지수형 단독 승부주",
+        actionGuide: "수급 편승 (20%)",
+        guideColor: "emerald",
+        reason: "나스닥 지수 외 종목으로 3일 만에 수량 45% 추가 매집 완료. AI 데이터센터 가스터빈 예약 폭주 반영.",
+        news: [
+          { title: "[외신] 美 데이터센터 가스터빈 예약 2029년 마감", source: "로이터", date: "10-02" }
+        ]
+      },
+      {
+        name: "두산에너빌리티 (034020)",
+        etfs: ["코스피플러스액티브", "코스피액티브"],
+        is_single_conviction: false,
+        current: "4.2%",
+        priceChange: 3.5,
+        shareChange: 42.0,
+        buy_date: "09-29 ~ 10-05",
+        consecutive_days: 6,
+        intensity: { level: 5, badge: "초강력 집중 매집 (Lv.5)", color: "purple" },
+        strategy: "house_pick",
+        strategyLabel: "하우스 압축픽",
+        actionGuide: "적극 매수 (30%)",
+        guideColor: "emerald",
+        reason: "국내 대형주 펀드 2곳에서 6영업일간 쉬지 않고 총 42% 매집. 체코 원전 수주 본계약 가시성 반영.",
+        news: [
+          { title: "[공시] 체코 두코바니 본계약 협상단 파견", source: "DART", date: "10-04" }
+        ]
+      },
+      {
+        name: "NVIDIA (NVDA)",
+        etfs: ["미국나스닥100액티브"],
+        is_single_conviction: false,
+        current: "12.5%",
+        priceChange: 14.8,
+        shareChange: -3.2,
+        buy_date: "10-02 (분할매도)",
+        consecutive_days: 0,
+        intensity: { level: 0, badge: "분할 익절 중", color: "amber" },
+        strategy: "passive_drift",
+        strategyLabel: "고점 착시",
+        actionGuide: "매수 금지 / 분할 익절",
+        guideColor: "amber",
+        reason: "주가는 폭등했으나 수량은 3.2% 덜어내며 분할 차익실현 중. 펀드 단일종목 상한선(15%) 관리 목적.",
+        news: [
+          { title: "[월가] 액티브 펀드들 빅테크 차익실현", source: "CNBC", date: "10-04" }
+        ]
+      },
+      {
+        name: "Apple (AAPL)",
+        etfs: ["미국나스닥100액티브"],
+        is_single_conviction: false,
+        current: "4.2%",
+        priceChange: 0.8,
+        shareChange: -24.5,
+        buy_date: "09-28 ~ 10-05 (매도)",
+        consecutive_days: 0,
+        intensity: { level: 0, badge: "대량 엑시트", color: "rose" },
+        strategy: "exit_warning",
+        strategyLabel: "엑시트 경보",
+        actionGuide: "즉시 동반 매도",
+        guideColor: "rose",
+        reason: "최근 1주일간 수량 24.5% 대량 이탈.",
+        news: [
+          { title: "[WSJ] 중국 스마트폰 점유율 하락", source: "WSJ", date: "10-03" }
+        ]
+      }
+    ];
+
+    let activeStockList = defaultData;
+    let currentStrategy = 'all';
+
+    async function loadLiveData(showNotice = false) {
+      const icon = document.getElementById('syncIcon');
+      if (icon) icon.classList.add('fa-spin');
+
+      try {
+        const res = await fetch('./data.json?t=' + new Date().getTime());
+        if (res.ok) {
+          const data = await res.json();
+          if (data.stocks && data.stocks.length > 0) {
+            activeStockList = data.stocks;
+          }
+          if (data.last_updated) {
+            document.getElementById('lastUpdated').textContent = "최근 자동수집: " + data.last_updated;
+          }
         }
-    ]
-
-    output = {
-        "last_updated": now_str,
-        "stocks": master_stocks
+      } catch (e) {
+        console.log("기본 데이터로 렌더링");
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+        renderTable();
+        if (showNotice) alert("동기화가 완료되었습니다.");
+      }
     }
 
-    with open("data.json", "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+    function filterStrategy(strat) {
+      if (currentStrategy === strat) {
+        currentStrategy = 'all';
+        document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
+      } else {
+        currentStrategy = strat;
+        document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
+        const activeCard = document.getElementById(`strat-${strat}`);
+        if (activeCard) activeCard.classList.add('ring-2', 'ring-white');
+      }
+      renderTable();
+    }
 
-    print("✅ data.json 생성 완료!")
+    function resetFilters() {
+      currentStrategy = 'all';
+      document.querySelectorAll('.strat-card').forEach(c => c.classList.remove('ring-2', 'ring-white'));
+      renderTable();
+    }
 
-if __name__ == "__main__":
-    run_update()
+    function renderTable() {
+      const tbody = document.getElementById('portfolioTableBody');
+      tbody.innerHTML = '';
+
+      let list = activeStockList;
+      if (currentStrategy !== 'all') {
+        list = list.filter(s => s.strategy === currentStrategy);
+      }
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-500 text-xs">해당 조건의 종목이 없습니다. [필터 초기화]를 눌러보세요.</td></tr>`;
+        return;
+      }
+
+      list.forEach((stock) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 cursor-pointer transition';
+        tr.onclick = () => selectStock(stock);
+
+        const shareColor = stock.shareChange > 0 ? 'text-emerald-400' : 'text-rose-400';
+        const signShare = stock.shareChange > 0 ? '+' : '';
+
+        let intensityBadge = 'bg-slate-800 text-slate-300 border border-slate-700';
+        if (stock.intensity.color === 'purple') intensityBadge = 'bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold';
+        if (stock.intensity.color === 'emerald') intensityBadge = 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold';
+        if (stock.intensity.color === 'amber') intensityBadge = 'bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        if (stock.intensity.color === 'rose') intensityBadge = 'bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold';
+
+        const singleTag = stock.is_single_conviction 
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/40 font-semibold ml-1.5">단독 승부주</span>` 
+          : '';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3">
+            <div class="font-bold text-white text-sm flex items-center">${stock.name} ${singleTag}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">${stock.etfs ? stock.etfs.join(', ') : ''}</div>
+          </td>
+          <td class="py-3 px-2 text-right font-mono text-slate-200">${stock.current}</td>
+          <td class="py-3 px-2 text-right font-mono ${shareColor} font-bold">${signShare}${stock.shareChange}%</td>
+          <td class="py-3 px-2 text-center font-mono text-xs text-slate-300">${stock.buy_date}</td>
+          <td class="py-3 px-3 text-center">
+            <span class="px-2.5 py-1 rounded-full text-[11px] ${intensityBadge}">
+              ${stock.intensity.badge}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (list.length > 0) {
+        selectStock(list[0]);
+      }
+    }
+
+    function selectStock(stock) {
+      document.getElementById('aiCardStock').textContent = stock.name;
+      document.getElementById('aiCardEtfList').textContent = stock.etfs ? stock.etfs.join(' + ') : '';
+      document.getElementById('aiCardStrategyTag').textContent = stock.strategyLabel ? stock.strategyLabel.toUpperCase() : 'CONVICTION';
+      document.getElementById('aiCardActionBadge').textContent = stock.actionGuide;
+
+      document.getElementById('aiCardDate').textContent = stock.buy_date;
+      document.getElementById('aiCardIntensity').textContent = stock.intensity.badge;
+      document.getElementById('aiCardConsecutive').textContent = stock.consecutive_days > 0 ? `${stock.consecutive_days}영업일 연속 순매수` : '순매수 없음 (차익실현/이탈)';
+
+      document.getElementById('aiCardReason').textContent = stock.reason;
+
+      const newsUl = document.getElementById('aiCardNewsList');
+      newsUl.innerHTML = '';
+      if (stock.news && stock.news.length > 0) {
+        stock.news.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'pt-2';
+          li.innerHTML = `
+            <div class="text-white hover:text-blue-300 font-medium leading-snug cursor-pointer">${item.title}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5 flex gap-2">
+              <span class="text-indigo-400">${item.source}</span>
+              <span>•</span>
+              <span>${item.date}</span>
+            </div>
+          `;
+          newsUl.appendChild(li);
+        });
+      }
+    }
+
+    window.onload = () => loadLiveData();
+  </script>
+</body>
+</html>
