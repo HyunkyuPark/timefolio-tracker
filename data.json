@@ -1,0 +1,44 @@
+{
+  "last_updated": "2026-10-05 02:33 기준",
+  "nasdaq": {
+    "title": "TIME 미국나스닥100액티브 (433540)",
+    "kpis": {
+      "holdings": "38개",
+      "activeShare": "68.5%"
+    },
+    "timeframes": {
+      "1w": [
+        {
+          "name": "Micron (MU)",
+          "current": "5.8%",
+          "delta": 1.9,
+          "priceChange": 4.2,
+          "shareChange": 28.5,
+          "category": "active_buy",
+          "typeLabel": "5일 지속매집",
+          "sector": "반도체/HBM",
+          "reason": "최근 1주일간 매일 수량을 늘려 총 +28.5% 매집 완료. AI 추론 단계 진입에 따른 실적 개선 확신 베팅.",
+          "triggers": [
+            "AI 추론 인프라 전환",
+            "HBM3E 공급처 확대"
+          ]
+        },
+        {
+          "name": "NVIDIA (NVDA)",
+          "current": "12.5%",
+          "delta": 1.2,
+          "priceChange": 14.8,
+          "shareChange": -3.2,
+          "category": "passive_drift",
+          "typeLabel": "주가폭등 착시",
+          "sector": "AI 가속기",
+          "reason": "1주일간 주가가 14.8% 급등해 비중이 커졌으나, 실제 수량은 3.2% 팔아서 차익실현 진행.",
+          "triggers": [
+            "비중 상한선(15%) 관리",
+            "분할 차익실현"
+          ]
+        }
+      ]
+    }
+  }
+}
