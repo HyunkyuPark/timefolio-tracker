@@ -7,7 +7,7 @@ from datetime import datetime, timezone, timedelta
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 KST = timezone(timedelta(hours=9))
 
-# 타임폴리오 14개 정규 6자리 주식형 액티브 ETF 전 라인업
+# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업
 ETF_REGISTRY = {
     "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
     "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
@@ -26,18 +26,24 @@ ETF_REGISTRY = {
 }
 
 SESSION = requests.Session()
-SESSION.headers.update({
-    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
-    "Referer": "https://m.stock.naver.com/",
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "ko-KR,ko;q=0.9"
-})
 
 def fetch_etf_holdings(code):
     items = {}
-    url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
+
+    # 방법 1: 네이버 증권 PC 정식 게이트웨이 (해외 IP 차단 우회 표준 규격)
     try:
-        res = SESSION.get(url, timeout=6)
+        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+            "Referer": f"https://finance.naver.com/item/main.naver?code={code}",
+            "Origin": "https://finance.naver.com",
+            "Accept": "application/json, text/plain, */*",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site"
+        }
+        res = SESSION.get(url, headers=headers, timeout=5)
         if res.status_code == 200:
             data = res.json().get("result", {}).get("portfolio", [])
             for r in data:
@@ -59,8 +65,44 @@ def fetch_etf_holdings(code):
 
                 if wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+            if items:
+                return items
     except Exception as e:
-        print(f"[{code}] 수집 지연: {e}")
+        pass
+
+    # 방법 2: 다음(카카오) 금융 오픈 포트폴리오 엔드포인트
+    try:
+        d_url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
+        d_headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://finance.daum.net/"
+        }
+        res = SESSION.get(d_url, headers=d_headers, timeout=5)
+        if res.status_code == 200:
+            data = res.json().get("data", [])
+            for r in data:
+                nm = (r.get("name") or "").strip()
+                if not nm or "원화" in nm:
+                    continue
+                try:
+                    wt = float(r.get("weight", 0.0))
+                except Exception:
+                    wt = 0.0
+                try:
+                    sh = float(r.get("volume", 0.0))
+                except Exception:
+                    sh = 0.0
+                try:
+                    pr = float(r.get("price", 0.0))
+                except Exception:
+                    pr = 0.0
+                if wt > 0.05:
+                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+            if items:
+                return items
+    except Exception:
+        pass
+
     return items
 
 def query_gemini_thesis(top_stocks):
@@ -137,6 +179,11 @@ def main():
         time.sleep(0.3)
 
     print(f"📊 총 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
+
+    # 만약 수집이 안 되었으면 빈 파일로 덮어쓰지 않고 즉시 중단
+    if success_count == 0:
+        print("⚠️ 펀드 데이터 수집 실패로 기존 파일을 보존합니다.")
+        return
 
     all_analyzed = []
 
@@ -247,10 +294,9 @@ def main():
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    if current_snapshot:
-        history[today_str] = current_snapshot
-        with open(history_file, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False)
+    history[today_str] = current_snapshot
+    with open(history_file, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False)
 
     print(f"🎉 성공! 실제 종목 {len(sorted_stocks)}개가 data.json에 기록되었습니다.")
 
