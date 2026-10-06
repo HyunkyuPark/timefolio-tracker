@@ -2,16 +2,14 @@ import json
 import os
 import time
 import requests
+import re
 from datetime import datetime, timezone, timedelta
-from pykrx import stock
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 KST = timezone(timedelta(hours=9))
 
-# 타임폴리오 14개 순수 주식형 액티브 ETF 전 라인업
+# 타임폴리오 14개 주식형 액티브 ETF 전 라인업
 ETF_REGISTRY = {
-    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
-    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
     "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
     "400580": {"name": "TIME 코스피액티브", "is_broad": True},
     "400570": {"name": "TIME 코스닥액티브", "is_broad": True},
@@ -20,62 +18,77 @@ ETF_REGISTRY = {
     "449180": {"name": "TIME K바이오액티브", "is_broad": False},
     "449190": {"name": "TIME K-이노베이션액티브", "is_broad": False},
     "432320": {"name": "TIME K컬처액티브", "is_broad": False},
+    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
     "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False},
     "478150": {"name": "TIME 글로벌우주테크&방산액티브", "is_broad": False},
-    "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False},
-    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False}
+    "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False}
 }
 
-def fetch_etf_holdings_pykrx(code):
+SESSION = requests.Session()
+
+def fetch_etf_holdings_wisereport(code):
+    """
+    네이버 증권 공식 데이터 제공처(와이즈리포트/FnGuide)에서 PDF 실제 장부 추출
+    (키값: STK_NM_KOR, ETF_WEIGHT, AGMT_STK_CNT)
+    """
     items = {}
+    url = f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={code}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Referer": "https://finance.naver.com/"
+    }
+
     try:
-        # 거래소(KRX) 공식 PDF(납입자산구성내역) 직통 조회
-        df = stock.get_etf_portfolio_deposit_file(code)
-        if df is not None and not df.empty:
-            # 전체 자산 대비 비중 계산을 위한 총합
-            total_val = 0.0
-            if "금액" in df.columns:
-                total_val = df["금액"].sum()
-            elif "평가금액" in df.columns:
-                total_val = df["평가금액"].sum()
-
-            for name, row in df.iterrows():
-                nm = str(name).strip()
-                if not nm or "원화" in nm or "현금" in nm or "예금" in nm:
-                    continue
-                
-                # 비중 계산
-                weight = 0.0
-                if "비중" in row:
-                    weight = float(row["비중"])
-                elif total_val > 0:
-                    val = float(row.get("금액", 0) or row.get("평가금액", 0))
-                    weight = round((val / total_val) * 100, 2)
-                
-                shares = float(row.get("수량", 0) or row.get("계약수", 1000))
-                price = float(row.get("종가", 0) or row.get("가격", 10000))
-
-                # 비중 정보가 없더라도 구성 종목으로 편입되어 있으면 등록
-                if weight > 0.05 or shares > 0:
-                    items[nm] = {
-                        "name": nm,
-                        "weight": weight if weight > 0 else 1.0,
-                        "shares": shares,
-                        "price": price
-                    }
-            if items:
-                return items
-    except Exception as e:
-        print(f"[{code}] pykrx 수집 예외: {e}")
-
-    # 백업: 네이버 모바일 API
-    try:
-        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
-        h = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", "Referer": "https://m.stock.naver.com/"}
-        res = requests.get(url, headers=h, timeout=4)
+        res = SESSION.get(url, headers=headers, timeout=8)
         if res.status_code == 200:
-            p_list = res.json().get("result", {}).get("portfolio", [])
-            for r in p_list:
+            text = res.text
+            # grid_data = [...] 파싱
+            start_idx = text.find("grid_data")
+            if start_idx != -1:
+                sub_text = text[start_idx:]
+                match = re.search(r"=\s*(\[\{.*?\}\]);", sub_text, re.DOTALL)
+                if match:
+                    raw_data = json.loads(match.group(1))
+                    for row in raw_data:
+                        # 와이즈리포트 공식 키값 적용
+                        nm = str(row.get("STK_NM_KOR") or row.get("JONG_NM") or row.get("ITEM_NAME") or "").strip()
+                        if not nm or "원화" in nm or "예금" in nm or "현금" in nm or "단기" in nm:
+                            continue
+
+                        # 비중(ETF_WEIGHT) 파싱
+                        wt_raw = row.get("ETF_WEIGHT") or row.get("WEIGHT") or row.get("SIGA_RATE") or 0
+                        try:
+                            wt = float(str(wt_raw).replace("%", "").replace(",", ""))
+                        except Exception:
+                            wt = 0.0
+
+                        # 주식수(AGMT_STK_CNT) 파싱
+                        sh_raw = row.get("AGMT_STK_CNT") or row.get("HOLD_QTY") or 0
+                        try:
+                            sh = float(str(sh_raw).replace(",", ""))
+                        except Exception:
+                            sh = 0.0
+
+                        if wt > 0.05 or sh > 0:
+                            items[nm] = {
+                                "name": nm,
+                                "weight": wt if wt > 0 else 1.0,
+                                "shares": sh,
+                                "price": 0.0
+                            }
+                    if items:
+                        return items
+    except Exception as e:
+        print(f"[{code}] 와이즈리포트 수집 에러: {e}")
+
+    # 백업: 네이버 모바일 통합 API
+    try:
+        m_url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
+        m_res = SESSION.get(m_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=4)
+        if m_res.status_code == 200:
+            for r in m_res.json().get("result", {}).get("portfolio", []):
                 nm = (r.get("itemName") or r.get("stockName") or "").strip()
                 wt = float(r.get("weight") or 0.0)
                 sh = float(r.get("share") or 0.0)
@@ -126,7 +139,7 @@ def main():
     now_kst = datetime.now(KST)
     now_time_str = now_kst.strftime("%Y-%m-%d %H:%M 기준")
     today_str = now_kst.strftime("%Y-%m-%d")
-    print(f"[{now_time_str}] 거래소(KRX) 직통 타임폴리오 14개 핵심 ETF 실데이터 수집 시작...")
+    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 실데이터 수집 시작 (WiseReport Direct)...")
 
     history_file = "history.json"
     history = {}
@@ -145,7 +158,7 @@ def main():
     success_count = 0
 
     for code, meta in ETF_REGISTRY.items():
-        items = fetch_etf_holdings_pykrx(code)
+        items = fetch_etf_holdings_wisereport(code)
         if items:
             success_count += 1
             print(f"✅ [{meta['name']}] 종목 {len(items)}개 수집 성공")
@@ -160,9 +173,14 @@ def main():
                 stock_to_etfs[s_name].append(meta["name"])
         else:
             print(f"⚠️ [{meta['name']}] 수집 대기")
-        time.sleep(0.3)
+        time.sleep(0.4)
 
-    print(f"📊 총 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
+    print(f"📊 최종 수집 결과: 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
+
+    # 성공 데이터가 1개 이상 있을 때 파일 저장
+    if success_count == 0:
+        print("❌ 수집 실패로 덮어쓰지 않습니다.")
+        return
 
     all_analyzed = []
 
@@ -270,14 +288,12 @@ def main():
         "stocks": sorted_stocks[:50]
     }
 
-    # 성공 데이터가 생성되면 무조건 저장
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    if current_snapshot:
-        history[today_str] = current_snapshot
-        with open(history_file, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False)
+    history[today_str] = current_snapshot
+    with open(history_file, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False)
 
     print(f"🎉 성공! 실제 종목 {len(sorted_stocks)}개가 data.json에 기록되었습니다.")
 
