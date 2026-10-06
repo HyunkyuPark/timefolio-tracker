@@ -3,21 +3,27 @@ import os
 import time
 import requests
 from datetime import datetime, timezone, timedelta
+from pykrx import stock
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 KST = timezone(timedelta(hours=9))
 
 # 타임폴리오 14개 주식형 액티브 ETF 전 라인업
 ETF_REGISTRY = {
+    # 1. 국내 대표 지수 & 밸류업
     "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
     "400580": {"name": "TIME 코스피액티브", "is_broad": True},
     "400570": {"name": "TIME 코스닥액티브", "is_broad": True},
     "495060": {"name": "TIME 코리아밸류업액티브", "is_broad": True},
+
+    # 2. 국내 특화 섹터/테마
     "404120": {"name": "TIME K신재생에너지액티브", "is_broad": False},
     "449180": {"name": "TIME K바이오액티브", "is_broad": False},
     "449190": {"name": "TIME K-이노베이션액티브", "is_broad": False},
     "432320": {"name": "TIME K컬처액티브", "is_broad": False},
     "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
+
+    # 3. 미국/글로벌 대표 테마
     "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
     "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
     "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False},
@@ -25,85 +31,48 @@ ETF_REGISTRY = {
     "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False}
 }
 
-SESSION = requests.Session()
-SESSION.headers.update({
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-    "Referer": "https://finance.naver.com/"
-})
-
-def fetch_etf_holdings_wisereport(code):
+def fetch_etf_holdings_pykrx(code):
     """
-    와이즈리포트(WiseReport) 실제 JSON 데이터셋(grid_data) 정밀 추출
+    한국거래소(KRX) 공식 PDF(납입자산구성내역) 직통 조회 (해외 IP 차단 없음)
     """
     items = {}
-    url = f"https://navercomp.wisereport.co.kr/v2/ETF/index.aspx?cmp_cd={code}"
-
     try:
-        res = SESSION.get(url, timeout=7)
-        if res.status_code == 200:
-            text = res.text
-            # grid_data 키 위치 탐색
-            idx = text.find('"grid_data"')
-            if idx == -1:
-                idx = text.find('grid_data')
+        df = stock.get_etf_portfolio_deposit_file(code)
+        if df is not None and not df.empty:
+            # 총 평가금액 산출
+            total_amt = 0.0
+            if "금액" in df.columns:
+                total_amt = df["금액"].sum()
+            elif "평가금액" in df.columns:
+                total_amt = df["평가금액"].sum()
 
-            if idx != -1:
-                # grid_data 뒤의 첫 번째 대괄호 '[' 부터 ']' 까지 직접 추출
-                b_start = text.find('[', idx)
-                b_end = text.find(']', b_start)
-                
-                if b_start != -1 and b_end != -1:
-                    json_str = text[b_start : b_end + 1]
-                    raw_list = json.loads(json_str)
+            for name, row in df.iterrows():
+                nm = str(name).strip()
+                if not nm or "원화" in nm or "현금" in nm or "예금" in nm or "단기" in nm:
+                    continue
 
-                    for row in raw_list:
-                        nm = str(row.get("STK_NM_KOR") or row.get("JONG_NM") or row.get("ITEM_NAME") or "").strip()
-                        nm = nm.replace('"', '').replace("'", "")
-                        
-                        # 현금성 및 단기성 자산 제외
-                        if not nm or "원화" in nm or "예금" in nm or "현금" in nm or "단기" in nm:
-                            continue
+                # 비중 계산
+                wt = 0.0
+                if "비중" in row:
+                    wt = float(row["비중"])
+                elif total_amt > 0:
+                    val = float(row.get("금액", 0) or row.get("평가금액", 0))
+                    wt = round((val / total_amt) * 100, 2)
 
-                        # 비중(ETF_WEIGHT)
-                        try:
-                            wt = float(str(row.get("ETF_WEIGHT", 0) or row.get("WEIGHT", 0)).replace("%", "").replace(",", ""))
-                        except Exception:
-                            wt = 0.0
+                sh = float(row.get("수량", 0) or row.get("계약수", 1000))
+                pr = float(row.get("종가", 0) or row.get("가격", 10000))
 
-                        # 주식수(AGMT_STK_CNT)
-                        try:
-                            sh = float(str(row.get("AGMT_STK_CNT", 0) or row.get("HOLD_QTY", 0)).replace(",", ""))
-                        except Exception:
-                            sh = 0.0
-
-                        if wt > 0.05 or sh > 0:
-                            items[nm] = {
-                                "name": nm,
-                                "weight": wt if wt > 0 else 1.0,
-                                "shares": sh,
-                                "price": 0.0
-                            }
-                    if items:
-                        return items
-    except Exception as e:
-        print(f"[{code}] 파싱 에러: {e}")
-
-    # 백업: 네이버 모바일 통합 포트폴리오
-    try:
-        m_url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
-        m_res = SESSION.get(m_url, timeout=4)
-        if m_res.status_code == 200:
-            for r in m_res.json().get("result", {}).get("portfolio", []):
-                nm = (r.get("itemName") or r.get("stockName") or "").strip()
-                wt = float(r.get("weight") or 0.0)
-                sh = float(r.get("share") or 0.0)
-                pr = float(r.get("price") or 0.0)
-                if nm and "원화" not in nm and wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+                if wt > 0.05 or sh > 0:
+                    items[nm] = {
+                        "name": nm,
+                        "weight": wt if wt > 0 else 1.0,
+                        "shares": sh,
+                        "price": pr
+                    }
             if items:
                 return items
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[{code}] pykrx 조회 로그: {e}")
 
     return items
 
@@ -144,7 +113,7 @@ def main():
     now_kst = datetime.now(KST)
     now_time_str = now_kst.strftime("%Y-%m-%d %H:%M 기준")
     today_str = now_kst.strftime("%Y-%m-%d")
-    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 실데이터 수집 시작 (WiseReport Direct Engine)...")
+    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 실데이터 수집 시작 (KRX Direct Engine)...")
 
     history_file = "history.json"
     history = {}
@@ -163,7 +132,7 @@ def main():
     success_count = 0
 
     for code, meta in ETF_REGISTRY.items():
-        items = fetch_etf_holdings_wisereport(code)
+        items = fetch_etf_holdings_pykrx(code)
         if items:
             success_count += 1
             print(f"✅ [{meta['name']}] 종목 {len(items)}개 수집 성공")
@@ -177,13 +146,14 @@ def main():
                     stock_to_etfs[s_name] = []
                 stock_to_etfs[s_name].append(meta["name"])
         else:
-            print(f"⚠️ [{meta['name']}] 수집 대기")
+            print(f"⚠️ [{meta['name']}] 응답 대기/스킵")
         time.sleep(0.3)
 
     print(f"📊 최종 수집 결과: 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
 
+    # 수집 실패 시 기존 data.json 보존
     if success_count == 0:
-        print("❌ 수집 실패로 업데이트를 중단합니다.")
+        print("❌ 수집 실패로 덮어쓰지 않고 종료합니다.")
         return
 
     all_analyzed = []
