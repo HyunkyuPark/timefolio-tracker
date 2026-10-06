@@ -1,17 +1,17 @@
-name: Daily Auto ETF Position Tracker
+name: Update Timefolio ETF Radar
 
 on:
   schedule:
-    # 한국시간(KST) 매일 17:30 (평일 월-금 장 마감 후) 실행 (UTC 기준 08:30)
-    - cron: '30 8 * * 1-5'
-  workflow_dispatch: # Actions 탭에서 [Run workflow] 버튼으로 즉시 수동 실행 허용
-
-permissions:
-  contents: write # data.json 파일을 저장소에 커밋/푸시할 수 있는 쓰기 권한 부여
+    # 한국 시간 기준 월~금(평일) 매일 저녁 18:30 자동 실행 (UTC 09:30)
+    - cron: '30 9 * * 1-5'
+  workflow_dispatch: # 언제든 수동으로 [Run workflow] 버튼을 눌러 돌릴 수도 있음
 
 jobs:
-  run-updater:
+  build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # 갱신된 data.json 파일을 저장소에 자동 커밋하기 위한 쓰기 권한
 
     steps:
       - name: Check out repository
@@ -25,20 +25,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests pandas beautifulsoup4 lxml pykrx
+          pip install requests
 
-      - name: Run ETF Tracker Script
+      - name: Run Tracker Engine
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python updater.py
 
-      - name: Commit and Push changes
+      - name: Commit and push updated data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase origin main || true
-          git add data.json history.json || true
-          git commit -m "Auto update ETF positions [skip ci]" || echo "No changes to commit"
-          git push origin main
-
+          git add data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update: $(date +'%Y-%m-%d %H:%M')" && git push)
