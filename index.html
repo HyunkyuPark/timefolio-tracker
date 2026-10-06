@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>타임폴리오 액티브 ETF 레이더 (14종 전수)</title>
-  <!-- Tailwind CSS & Lucide Icons -->
+  <title>타임폴리오 ETF & 텔레그램 인텔리전스 레이더</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -25,8 +24,8 @@
         </div>
         <div>
           <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-            타임폴리오 액티브 레이더
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">14종 전수</span>
+            타임폴리오 인텔리전스 레이더
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">14종 전수 + 텔레그램</span>
           </h1>
           <p id="lastUpdated" class="text-[11px] text-slate-400">데이터 로딩 중...</p>
         </div>
@@ -42,28 +41,44 @@
     <!-- 감시 현황 요약 카드 -->
     <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
       <div>
-        <div class="text-[11px] font-medium text-slate-400">실시간 추적 ETF 포트폴리오</div>
-        <div class="text-lg font-black text-white mt-0.5 flex items-center gap-2">
-          <span id="trackedCount" class="text-blue-400">14</span>개 ETF 전 라인업
+        <div class="text-[11px] font-medium text-slate-400">오피셜 텔레그램 연동 채널</div>
+        <div class="text-base font-black text-white mt-0.5 flex items-center gap-2">
+          <a href="https://t.me/activeetf" target="_blank" class="text-blue-400 hover:underline flex items-center gap-1">
+            @activeetf <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+          </a>
         </div>
       </div>
-      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        실시간 PDF 동기화 완료
+      <div class="text-right">
+        <div class="text-[11px] font-medium text-slate-400">감시 펀드</div>
+        <div class="text-sm font-bold text-emerald-400">14개 액티브 ETF 전수</div>
+      </div>
+    </div>
+
+    <!-- 💡 운용역 텔레그램 핵심 테크 & 섹터 인과관계 플로우 보드 -->
+    <div class="glass-card rounded-2xl p-4 space-y-3 border-blue-500/30">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs font-bold text-white flex items-center gap-1.5 tracking-tight">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          운용역 텔레그램 포커스 $\rightarrow$ 실제 장부 매집 인과 흐름
+        </h2>
+        <span class="text-[10px] text-blue-400 font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">AI 추론</span>
+      </div>
+
+      <div id="briefingList" class="space-y-2.5">
+        <!-- 자바스크립트로 브리핑 렌더링 -->
       </div>
     </div>
 
     <!-- 필터 탭 -->
-    <div class="flex space-x-2 overflow-x-auto pb-1 text-xs font-semibold scrollbar-none">
-      <button onclick="setFilter('all')" id="btn-all" class="filter-btn px-3 py-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30 whitespace-nowrap">전체 보기</button>
+    <div class="flex space-x-2 overflow-x-auto pb-1 text-xs font-semibold scrollbar-none pt-1">
+      <button onclick="setFilter('all')" id="btn-all" class="filter-btn px-3 py-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30 whitespace-nowrap">전체 종목</button>
       <button onclick="setFilter('super')" id="btn-super" class="filter-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white whitespace-nowrap">🔥 슈퍼 압축픽 (3개+)</button>
       <button onclick="setFilter('house')" id="btn-house" class="filter-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white whitespace-nowrap">하우스 압축픽 (2개)</button>
       <button onclick="setFilter('single')" id="btn-single" class="filter-btn px-3 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white whitespace-nowrap">지수형 단독 승부주</button>
     </div>
 
-    <!-- 종목 카드 리스트 컨테이너 -->
+    <!-- 종목 리스트 -->
     <div id="stockList" class="space-y-3">
-      <!-- 자바스크립트로 렌더링 -->
       <div class="text-center py-16 text-slate-500 text-sm">
         장부 데이터를 불러오는 중입니다...
       </div>
@@ -77,25 +92,53 @@
 
     async function loadRadarData() {
       const listEl = document.getElementById('stockList');
+      const briefingEl = document.getElementById('briefingList');
       const updatedEl = document.getElementById('lastUpdated');
-      const countEl = document.getElementById('trackedCount');
 
       try {
-        // 캐시 방지 파라미터 추가
         const res = await fetch('data.json?t=' + new Date().getTime());
-        if (!res.ok) throw new Error("네트워크 응답 오류");
+        if (!res.ok) throw new Error("데이터 로드 실패");
         const data = await res.json();
 
         updatedEl.textContent = data.last_updated || '최신 업데이트 완료';
-        countEl.textContent = data.total_etfs_tracked || (data.tracked_etfs ? data.tracked_etfs.length : 14);
         allStocks = data.stocks || [];
+
+        // 텔레그램 인텔리전스 브리핑 보드 렌더링
+        const briefings = data.briefings || [];
+        if (briefings.length > 0) {
+          briefingEl.innerHTML = briefings.map(b => `
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                  ${b.sector}
+                </span>
+                <span class="text-[10px] font-bold text-emerald-400 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                  ${b.signal}
+                </span>
+              </div>
+              
+              <!-- 인과관계 화살표 플로우 -->
+              <div class="grid grid-cols-1 gap-1.5 text-[11px] pt-1 border-t border-slate-800/60">
+                <div class="text-slate-400 flex items-start gap-1.5">
+                  <span class="text-blue-400 font-semibold shrink-0">💡 주목 기술:</span>
+                  <span>${b.tech_driver}</span>
+                </div>
+                <div class="text-slate-300 flex items-start gap-1.5 font-medium">
+                  <span class="text-emerald-400 font-semibold shrink-0">🛒 실제 장부:</span>
+                  <span>${b.portfolio_action}</span>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
 
         renderStocks();
       } catch (err) {
         console.error(err);
         listEl.innerHTML = `
           <div class="glass-card rounded-2xl p-8 text-center text-rose-400 text-sm">
-            데이터를 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.
+            데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
           </div>
         `;
       }
@@ -130,11 +173,6 @@
         return true;
       });
 
-      if (filtered.length === 0) {
-        listEl.innerHTML = `<div class="glass-card rounded-2xl p-8 text-center text-slate-500 text-sm">해당 조건에 일치하는 종목이 없습니다.</div>`;
-        return;
-      }
-
       listEl.innerHTML = filtered.map(s => {
         const etfCount = s.etfs ? s.etfs.length : 1;
         const etfBadges = (s.etfs || []).map(e => `
@@ -168,13 +206,15 @@
               </div>
             </div>
 
-            <!-- AI 투자 가설 및 근거 -->
+            <!-- 운용역 텔레그램 연계 투자 가설 -->
             <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/80 space-y-1.5">
-              <div class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-400"></i> 운용역 매수 가설 (Thesis)
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-bold text-slate-300 flex items-center gap-1.5">
+                  <i data-lucide="send" class="w-3.5 h-3.5 text-blue-400"></i> 텔레그램 연관: <span class="text-blue-300">${s.tele_mention || '하우스 핵심 모멘텀'}</span>
+                </span>
+                <span class="text-[10px] text-amber-400 font-medium">${s.target_flow || '수급 집중 유입'}</span>
               </div>
               <p class="text-xs text-slate-400 leading-relaxed font-normal">${s.reason || '타임폴리오 복수 펀드 집중 편입 종목'}</p>
-              ${s.metric ? `<div class="text-[11px] text-slate-500 pt-1 border-t border-slate-800/60 whitespace-pre-line">${s.metric}</div>` : ''}
             </div>
           </div>
         `;
@@ -183,7 +223,6 @@
       lucide.createIcons();
     }
 
-    // 초기 실행
     window.addEventListener('DOMContentLoaded', () => {
       loadRadarData();
     });
