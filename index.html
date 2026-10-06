@@ -4,26 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>오늘의 ETF — TIME 액티브 레이더</title>
-  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Markdown Parser for Gemini Pro Modal -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; }
     .prose-custom { color: #334155; font-size: 0.875rem; line-height: 1.6; }
-    .prose-custom h3 { color: #0f172a; font-weight: 700; margin-top: 1rem; margin-bottom: 0.25rem; }
-    .prose-custom ul { list-style-type: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
   </style>
 </head>
 <body class="min-h-screen pb-20 bg-[#f8fafc]">
 
-  <!-- 1. 앱 스타일 최상단 헤더 -->
+  <!-- 상단 앱 헤더 바 -->
   <header class="sticky top-0 z-40 bg-white border-b border-slate-200">
     <div class="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <button class="text-slate-700 p-1"><i data-lucide="menu" class="w-5 h-5"></i></button>
+        <button class="text-slate-700 p-1 text-lg">☰</button>
         <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 via-blue-500 to-teal-400 p-[1.5px] flex items-center justify-center">
           <div class="w-full h-full bg-white rounded-full flex items-center justify-center">
             <div class="w-3.5 h-3.5 rounded-full bg-blue-600"></div>
@@ -31,13 +26,8 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <button class="text-slate-700 p-1"><i data-lucide="search" class="w-5 h-5"></i></button>
-        <button onclick="openApiKeyModal()" class="text-slate-700 p-1 relative">
-          <i data-lucide="key" class="w-5 h-5 text-amber-500"></i>
-        </button>
-        <button onclick="loadRadarData()" class="text-slate-700 p-1">
-          <i data-lucide="refresh-cw" class="w-5 h-5 text-slate-500"></i>
-        </button>
+        <button onclick="openApiKeyModal()" class="text-amber-500 text-sm font-bold p-1">🔑</button>
+        <button onclick="loadRadarData()" class="text-slate-500 text-sm font-bold p-1">🔄</button>
         <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
           뿌리
         </div>
@@ -57,41 +47,35 @@
       <div class="text-[11px] text-slate-500 flex items-center gap-2">
         <span>TIME 14종 전수</span>
         <span class="text-slate-300">|</span>
-        <span id="lastUpdated" class="text-blue-600 font-medium">동기화 중...</span>
+        <span id="lastUpdated" class="text-blue-600 font-semibold">동기화 완료</span>
       </div>
     </div>
 
     <!-- 네비게이션 탭 -->
     <div class="max-w-md mx-auto px-4 flex gap-6 text-sm font-semibold border-t border-slate-100 overflow-x-auto scrollbar-none bg-white">
-      <button class="py-3 text-slate-900 border-b-2 border-slate-900 font-bold whitespace-nowrap">오늘의 TIME ETF</button>
-      <button onclick="setFilter('super')" class="py-3 text-slate-400 hover:text-slate-600 whitespace-nowrap">🔥 슈퍼압축픽</button>
-      <button onclick="setFilter('single')" class="py-3 text-slate-400 hover:text-slate-600 whitespace-nowrap">지수형 승부주</button>
+      <button onclick="setActiveTab('new')" id="nav-new" class="py-3 text-slate-900 border-b-2 border-slate-900 font-bold whitespace-nowrap">ETF가 새로 편입한 종목</button>
+      <button onclick="setActiveTab('core')" id="nav-core" class="py-3 text-slate-400 hover:text-slate-600 whitespace-nowrap">🔥 하우스 복수 보유픽</button>
     </div>
   </header>
 
-  <!-- 2. 메인 컨텐츠 영역 -->
+  <!-- 메인 리스트 컨테이너 -->
   <main class="max-w-md mx-auto px-4 pt-4 space-y-4">
-
-    <!-- 섹션 타이틀 -->
     <div class="flex items-center justify-between">
-      <h2 class="text-base font-bold text-slate-900 flex items-center gap-1.5">
+      <h2 id="sectionTitle" class="text-base font-bold text-slate-900 flex items-center gap-1.5">
         TIME ETF가 새로 편입한 종목
-        <span class="text-slate-400 cursor-pointer text-xs" title="타임폴리오 14종 액티브 ETF의 최근 편입 및 집중 매집 종목입니다.">ⓘ</span>
+        <span class="text-slate-400 cursor-pointer text-xs" title="어제 장부에는 없다가 오늘 14개 TIME ETF에 최초 신규 매수된 종목들입니다.">ⓘ</span>
       </h2>
       <span class="text-xs text-slate-500 font-medium" id="itemCount">0개 포착</span>
     </div>
 
-    <!-- 종목 랭킹 리스트 컨테이너 -->
     <div id="stockList" class="space-y-3">
-      <!-- 동적 렌더링 -->
       <div class="bg-white rounded-2xl p-8 text-center text-slate-400 text-xs border border-slate-200">
         데이터를 불러오는 중입니다...
       </div>
     </div>
-
   </main>
 
-  <!-- 3. Gemini Pro 심층 리서치 모달 (팝업창) -->
+  <!-- Gemini Pro 심층 리서치 모달 -->
   <div id="proModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-lg max-h-[85vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl border border-slate-200">
       <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -99,11 +83,8 @@
           <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 font-bold border border-indigo-200">GEMINI PRO RESEARCH</span>
           <h2 id="modalStockName" class="text-base font-bold text-slate-900 mt-1">종목명</h2>
         </div>
-        <button onclick="closeProModal()" class="p-1.5 rounded-full hover:bg-slate-200 text-slate-400">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+        <button onclick="closeProModal()" class="p-1 rounded-full text-slate-400 hover:bg-slate-200 text-base font-bold">✕</button>
       </div>
-
       <div id="modalContent" class="p-5 overflow-y-auto space-y-4 prose-custom"></div>
     </div>
   </div>
@@ -111,13 +92,8 @@
   <!-- API Key 설정 모달 -->
   <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-3 shadow-2xl border border-slate-200">
-      <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-        <i data-lucide="key" class="w-4 h-4 text-amber-500"></i> Gemini API Key 설정
-      </h3>
-      <p class="text-xs text-slate-500 leading-relaxed">
-        Google AI Studio에서 발급받은 무료 API Key를 입력하시면 개인 브라우저에 안전하게 저장됩니다.
-      </p>
-      <input type="password" id="userApiKeyInput" placeholder="AIzaSy..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:border-blue-500" />
+      <h3 class="text-sm font-bold text-slate-900 flex items-center gap-1.5">🔑 Gemini API Key</h3>
+      <input type="password" id="userApiKeyInput" placeholder="AIzaSy..." class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none" />
       <div class="flex justify-end gap-2 pt-1">
         <button onclick="closeApiKeyModal()" class="px-3 py-1.5 rounded-lg text-xs text-slate-500">취소</button>
         <button onclick="saveApiKey()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-xs font-bold text-white shadow-sm">저장</button>
@@ -126,11 +102,10 @@
   </div>
 
   <script>
-    let allStocks = [];
-    let currentCountry = 'KR'; // 'KR' or 'US'
-    let currentFilter = 'all';
+    let rawData = { new_entries: [], core_holdings: [] };
+    let currentCountry = 'KR';
+    let currentTab = 'new'; // 'new' or 'core'
 
-    // 한국 주식 여부 판별 (한글 포함 여부 및 종목코드 규칙)
     function isKoreanStock(name) {
       return /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(name);
     }
@@ -138,12 +113,18 @@
     async function loadRadarData() {
       const updatedEl = document.getElementById('lastUpdated');
       try {
-        const res = await fetch(`data.json?v=${new Date().getTime()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error("로드 실패");
-        const data = await res.json();
+        const res = await fetch('./data.json?v=' + new Date().getTime(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('data.json 로드 실패');
+        rawData = await res.json();
+        updatedEl.textContent = rawData.last_updated || '오늘 기준';
 
-        updatedEl.textContent = data.last_updated || '오늘 기준';
-        allStocks = data.stocks || [];
+        // 신규 편입 데이터가 아직 없는 첫날인 경우 자동으로 복수 보유픽 탭 활성화
+        const newCount = (rawData.new_entries || []).length;
+        if (newCount === 0 && (rawData.core_holdings || []).length > 0) {
+          currentTab = 'core';
+        }
+
+        updateTabUI();
         renderList();
       } catch (err) {
         console.error(err);
@@ -152,44 +133,52 @@
 
     function setCountry(country) {
       currentCountry = country;
-      if (country === 'KR') {
-        document.getElementById('tab-KR').className = "px-2.5 py-1 rounded-full bg-white shadow-sm font-bold flex items-center gap-1 text-slate-800";
-        document.getElementById('tab-US').className = "px-2.5 py-1 rounded-full text-slate-400 font-medium flex items-center gap-1";
-      } else {
-        document.getElementById('tab-US').className = "px-2.5 py-1 rounded-full bg-white shadow-sm font-bold flex items-center gap-1 text-slate-800";
-        document.getElementById('tab-KR').className = "px-2.5 py-1 rounded-full text-slate-400 font-medium flex items-center gap-1";
-      }
+      document.getElementById('tab-KR').className = country === 'KR'
+        ? "px-2.5 py-1 rounded-full bg-white shadow-sm font-bold flex items-center gap-1 text-slate-800"
+        : "px-2.5 py-1 rounded-full text-slate-400 font-medium flex items-center gap-1";
+      document.getElementById('tab-US').className = country === 'US'
+        ? "px-2.5 py-1 rounded-full bg-white shadow-sm font-bold flex items-center gap-1 text-slate-800"
+        : "px-2.5 py-1 rounded-full text-slate-400 font-medium flex items-center gap-1";
       renderList();
     }
 
-    function setFilter(filter) {
-      currentFilter = currentFilter === filter ? 'all' : filter;
+    function setActiveTab(tab) {
+      currentTab = tab;
+      updateTabUI();
       renderList();
+    }
+
+    function updateTabUI() {
+      document.getElementById('nav-new').className = currentTab === 'new'
+        ? "py-3 text-slate-900 border-b-2 border-slate-900 font-bold whitespace-nowrap"
+        : "py-3 text-slate-400 hover:text-slate-600 whitespace-nowrap";
+      document.getElementById('nav-core').className = currentTab === 'core'
+        ? "py-3 text-slate-900 border-b-2 border-slate-900 font-bold whitespace-nowrap"
+        : "py-3 text-slate-400 hover:text-slate-600 whitespace-nowrap";
+
+      document.getElementById('sectionTitle').innerHTML = currentTab === 'new'
+        ? `TIME ETF가 새로 편입한 종목 <span class="text-slate-400 cursor-pointer text-xs" title="어제 장부에는 없다가 오늘 14개 TIME ETF에 최초 신규 매수된 종목들입니다.">ⓘ</span>`
+        : `🔥 하우스 복수 보유픽 <span class="text-slate-400 cursor-pointer text-xs" title="복수의 TIME ETF가 함께 담고 있는 주력 종목들입니다.">ⓘ</span>`;
     }
 
     function renderList() {
       const container = document.getElementById('stockList');
       const countEl = document.getElementById('itemCount');
 
-      // 1. 국가 필터링
-      let filtered = allStocks.filter(s => {
+      const sourceList = (currentTab === 'new') ? (rawData.new_entries || []) : (rawData.core_holdings || []);
+
+      let filtered = sourceList.filter(s => {
         const isKr = isKoreanStock(s.name);
         return currentCountry === 'KR' ? isKr : !isKr;
       });
-
-      // 2. 전략 필터링
-      if (currentFilter === 'super') {
-        filtered = filtered.filter(s => (s.etfs && s.etfs.length >= 2));
-      } else if (currentFilter === 'single') {
-        filtered = filtered.filter(s => s.is_single_conviction);
-      }
 
       countEl.textContent = `${filtered.length}개 포착`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
-          <div class="bg-white rounded-2xl p-10 text-center text-slate-400 text-xs border border-slate-200">
-            해당 조건의 편입 종목이 없습니다.
+          <div class="bg-white rounded-2xl p-10 text-center text-slate-400 text-xs border border-slate-200 space-y-1">
+            <div class="font-bold text-slate-600 text-sm">${currentTab === 'new' ? '오늘 신규 편입된 종목이 없습니다.' : '해당 조건의 종목이 없습니다.'}</div>
+            <div class="text-[11px] text-slate-400">${currentTab === 'new' ? '상단의 [🔥 하우스 복수 보유픽] 탭에서 현재 운용 중인 종목을 확인하실 수 있습니다.' : ''}</div>
           </div>
         `;
         return;
@@ -197,23 +186,34 @@
 
       container.innerHTML = filtered.map((s, index) => {
         const rank = index + 1;
-        const etfList = s.etfs || [];
-        const etfCount = etfList.length;
         const isTop = rank === 1;
 
-        // ETF 편입 비중 칩 목록 생성
-        const etfBadges = etfList.map(etfName => `
-          <div class="inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-600 font-medium">
-            ${etfName.replace('TIME ', '')} <span class="ml-1 text-slate-900 font-bold">${s.current}</span>
-          </div>
-        `).join('');
+        let badgesHtml = '';
+        let etfCount = 0;
 
-        const safeStr = encodeURIComponent(JSON.stringify(s));
+        if (currentTab === 'new') {
+          const entries = s.etf_entries || [];
+          etfCount = entries.length;
+          badgesHtml = entries.map(e => `
+            <div class="inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-600 font-medium">
+              ${e.etf_name} <span class="ml-1 text-slate-900 font-bold">${e.weight}</span>
+            </div>
+          `).join('');
+        } else {
+          const etfs = s.etfs || [];
+          etfCount = etfs.length;
+          badgesHtml = etfs.map(e => `
+            <div class="inline-flex items-center px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[11px] text-slate-600 font-medium">
+              ${e}
+            </div>
+          `).join('');
+        }
 
-        // 뚝이지 스타일: 1위는 연한 에메랄드 테두리 카드, 2위 이하는 깔끔한 화이트 카드
+        const tickerText = (s.ticker && s.ticker !== '000000') ? s.ticker : '';
+
         if (isTop) {
           return `
-            <div class="bg-white rounded-2xl p-4 border-2 border-emerald-300/80 shadow-sm space-y-3 transition">
+            <div class="bg-white rounded-2xl p-4 border-2 border-emerald-300/90 shadow-sm space-y-3 transition">
               <div class="flex items-center justify-between">
                 <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                   ${currentCountry === 'KR' ? '🇰🇷 국내' : '🇺🇸 해외'} 1위
@@ -226,36 +226,32 @@
               <div>
                 <div class="flex items-baseline gap-1.5">
                   <h3 class="text-base font-black text-slate-900 tracking-tight">${s.name}</h3>
-                  <span class="text-[11px] text-slate-400 font-medium">000000</span>
+                  ${tickerText ? `<span class="text-[11px] text-slate-400 font-medium">${tickerText}</span>` : ''}
                 </div>
                 <div class="flex flex-wrap gap-1.5 mt-2.5">
-                  ${etfBadges}
+                  ${badgesHtml}
                 </div>
               </div>
 
-              <!-- 텔레그램 인과관계 요약 -->
               <div class="bg-slate-50 rounded-xl p-2.5 text-[11px] text-slate-600 border border-slate-100 flex items-start gap-1.5">
                 <span class="text-blue-600 font-bold shrink-0">💡 운용역 포커스:</span>
-                <span class="line-clamp-2">${s.reason || s.logic_chain || '복수 펀드 집중 매집 대장주'}</span>
+                <span class="line-clamp-2">${s.reason || '타임폴리오 펀드 실제 장부 편입'}</span>
               </div>
 
-              <!-- Pro 심층 리서치 버튼 -->
-              <button onclick="requestProDeepDive('${safeStr}')" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-                Gemini Pro 심층 리포트 보기
+              <button onclick="requestProDeepDive(${index})" class="w-full py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition">
+                <span>✨ Gemini Pro 심층 리포트 보기</span>
               </button>
             </div>
           `;
         }
 
-        // 2위 이하 일반 카드
         return `
           <div class="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-sm space-y-2.5 transition">
             <div class="flex items-center justify-between">
               <div class="flex items-baseline gap-2">
                 <span class="text-xs font-bold text-slate-400 w-3">${rank}</span>
                 <h3 class="text-sm font-bold text-slate-900 tracking-tight">${s.name}</h3>
-                <span class="text-[10px] text-slate-400 font-medium">000000</span>
+                ${tickerText ? `<span class="text-[10px] text-slate-400 font-medium">${tickerText}</span>` : ''}
               </div>
               <span class="text-xs font-black text-slate-800">
                 ${etfCount} <span class="text-[11px] font-medium text-slate-400">ETF</span>
@@ -263,24 +259,25 @@
             </div>
 
             <div class="flex flex-wrap gap-1.5 pl-5">
-              ${etfBadges}
+              ${badgesHtml}
             </div>
 
             <div class="pl-5 pt-1">
-              <button onclick="requestProDeepDive('${safeStr}')" class="text-[11px] text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                <i data-lucide="sparkles" class="w-3 h-3 text-indigo-500"></i> 운용역 매수 가설 & 리포트 보기
+              <button onclick="requestProDeepDive(${index})" class="text-[11px] text-indigo-600 font-bold hover:underline flex items-center gap-1">
+                <span>✨ 운용역 매수 가설 & 리포트 보기</span>
               </button>
             </div>
           </div>
         `;
       }).join('');
-
-      lucide.createIcons();
     }
 
-    // Gemini Pro 리서치 호출 함수
-    async function requestProDeepDive(encodedStock) {
-      const stock = JSON.parse(decodeURIComponent(encodedStock));
+    async function requestProDeepDive(stockIndex) {
+      const sourceList = (currentTab === 'new') ? (rawData.new_entries || []) : (rawData.core_holdings || []);
+      let filtered = sourceList.filter(s => currentCountry === 'KR' ? isKoreanStock(s.name) : !isKoreanStock(s.name));
+      const stock = filtered[stockIndex];
+      if (!stock) return;
+
       const modal = document.getElementById('proModal');
       const titleEl = document.getElementById('modalStockName');
       const contentEl = document.getElementById('modalContent');
@@ -292,7 +289,6 @@
         <div class="py-12 flex flex-col items-center justify-center text-center space-y-2">
           <div class="w-7 h-7 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           <div class="text-xs text-indigo-600 font-bold">Gemini Pro가 심층 리포트를 작성 중입니다...</div>
-          <p class="text-[11px] text-slate-400">공식 텔레그램 및 14개 ETF 포트폴리오 교차 연산 중</p>
         </div>
       `;
 
@@ -301,7 +297,6 @@
         contentEl.innerHTML = `
           <div class="p-6 text-center space-y-3">
             <h4 class="text-sm font-bold text-slate-900">Gemini API Key가 필요합니다</h4>
-            <p class="text-xs text-slate-500">우측 상단 열쇠(🔑) 버튼을 눌러 API Key를 등록해 주세요.</p>
             <button onclick="closeProModal(); openApiKeyModal();" class="px-4 py-2 rounded-xl bg-blue-600 text-xs font-bold text-white">등록하러 가기</button>
           </div>
         `;
@@ -310,18 +305,14 @@
 
       const prompt = `
 당신은 타임폴리오자산운용의 수석 리서치 애널리스트입니다.
-아래 종목에 대해 투자자가 '왜 타임폴리오 ETF들이 이 종목을 담았는지'를 납득할 수 있는 심층 리서치 메모를 마크다운 형식으로 작성해 주십시오.
+아래 종목은 타임폴리오 액티브 ETF에 편입된 핵심 종목입니다.
+[종목명]: ${stock.name} (${stock.ticker || ''})
+[사유]: ${stock.reason || ''}
 
-[종목 정보]:
-- 종목명: ${stock.name}
-- 편입된 TIME ETF: ${(stock.etfs || []).join(', ')}
-- 편입 비중: ${stock.current}
-- 텔레그램 연계 단서: ${stock.trigger || stock.reason || ''}
-
-다음 목차로 냉철하고 실전적으로 작성해 주십시오:
+투자자가 납득할 수 있는 심층 리서치 메모를 마크다운 형식으로 작성해 주십시오:
 1. ### 1. 운용역이 주목한 핵심 산업/기술 모멘텀
 2. ### 2. 기업의 독점력과 실적 레버리지 (Moat)
-3. ### 3. TIME ETF 복수 편입의 의미 및 투자 행동 지침
+3. ### 3. TIME ETF 편입의 의미 및 투자 행동 지침
       `;
 
       try {
@@ -334,7 +325,7 @@
         const reportMd = data.candidates[0].content.parts[0].text;
         contentEl.innerHTML = marked.parse(reportMd);
       } catch (err) {
-        contentEl.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">보고서 생성 실패: ${err.message}</div>`;
+        contentEl.innerHTML = `<div class="p-4 text-center text-xs text-rose-500">생성 실패: ${err.message}</div>`;
       }
     }
 
