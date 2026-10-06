@@ -1,633 +1,258 @@
 {
-  "last_updated": "2026-10-07 01:30 기준",
+  "last_updated": "2026-10-07 01:39 기준",
   "total_etfs_tracked": 14,
-  "telegram_channel": "@activeetf",
-  "briefings": [],
-  "tracked_etfs": [
-    "TIME 코스피플러스액티브",
-    "TIME 코스피액티브",
-    "TIME 코스닥액티브",
-    "TIME 코리아밸류업액티브",
-    "TIME K신재생에너지액티브",
-    "TIME K바이오액티브",
-    "TIME K-이노베이션액티브",
-    "TIME K컬처액티브",
-    "TIME 글로벌소부장액티브",
-    "TIME 미국나스닥100액티브",
-    "TIME 미국S&P500액티브",
-    "TIME 글로벌AI인공지능액티브",
-    "TIME 글로벌우주테크&방산액티브",
-    "TIME 글로벌소비트렌드액티브"
-  ],
-  "stocks": [
-    {
-      "name": "SK하이닉스",
-      "etfs": [
-        "TIME K-이노베이션액티브",
-        "TIME 코스피플러스액티브",
-        "TIME 코스피액티브",
-        "TIME 글로벌AI인공지능액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "12.40%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "🔥 슈퍼 압축픽 (4개 펀드)",
-      "actionGuide": "초강력 집중 매수 (45%)",
-      "guideColor": "emerald",
-      "priority_score": 99,
-      "reason": "타임폴리오 TIME 코스피플러스액티브 실제 편입 비중 12.40%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "삼성전자",
-      "etfs": [
-        "TIME 코스피플러스액티브",
-        "TIME 코스피액티브",
-        "TIME 코리아밸류업액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "18.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "🔥 슈퍼 압축픽 (3개 펀드)",
-      "actionGuide": "초강력 집중 매수 (40%)",
-      "guideColor": "emerald",
-      "priority_score": 99,
-      "reason": "타임폴리오 TIME 코스피플러스액티브 실제 편입 비중 18.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
+  "new_entries": [
     {
       "name": "알테오젠",
-      "etfs": [
-        "TIME K-이노베이션액티브",
-        "TIME 코스닥액티브",
-        "TIME K바이오액티브"
+      "ticker": "196170",
+      "etf_entries": [
+        {
+          "etf_name": "K-이노베이션액티브",
+          "weight": "8.7%"
+        },
+        {
+          "etf_name": "코스닥액티브",
+          "weight": "11.2%"
+        },
+        {
+          "etf_name": "K바이오액티브",
+          "weight": "14.8%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "11.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "🔥 슈퍼 압축픽 (3개 펀드)",
-      "actionGuide": "초강력 집중 매수 (40%)",
-      "guideColor": "emerald",
-      "priority_score": 99,
-      "reason": "타임폴리오 TIME 코스닥액티브 실제 편입 비중 11.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME K-이노베이션액티브에 최초 신규 매수 포착."
     },
     {
-      "name": "NVIDIA Corp",
-      "etfs": [
-        "TIME 미국나스닥100액티브",
-        "TIME 글로벌AI인공지능액티브",
-        "TIME 미국S&P500액티브"
+      "name": "코스맥스",
+      "ticker": "192820",
+      "etf_entries": [
+        {
+          "etf_name": "K컬처액티브",
+          "weight": "2.0%"
+        },
+        {
+          "etf_name": "코리아밸류업액티브",
+          "weight": "0.2%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "9.85%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "🔥 슈퍼 압축픽 (3개 펀드)",
-      "actionGuide": "초강력 집중 매수 (40%)",
-      "guideColor": "emerald",
-      "priority_score": 99,
-      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 9.85%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME K컬처액티브에 최초 신규 매수 포착."
     },
     {
-      "name": "한미반도체",
-      "etfs": [
-        "TIME 글로벌소부장액티브",
-        "TIME 글로벌AI인공지능액티브"
+      "name": "Synopsys Inc",
+      "ticker": "SNPS",
+      "etf_entries": [
+        {
+          "etf_name": "미국나스닥100액티브",
+          "weight": "2.1%"
+        },
+        {
+          "etf_name": "글로벌AI인공지능액티브",
+          "weight": "1.8%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "11.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "하우스 동반 매집 (2개 펀드)",
-      "actionGuide": "적극 분할 매수 (30%)",
-      "guideColor": "emerald",
-      "priority_score": 90,
-      "reason": "타임폴리오 TIME 글로벌소부장액티브 실제 편입 비중 11.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME 미국나스닥100액티브에 최초 신규 매수 포착."
     },
     {
-      "name": "삼양식품",
-      "etfs": [
-        "TIME 글로벌소비트렌드액티브",
-        "TIME K컬처액티브"
+      "name": "SK하이닉스",
+      "ticker": "000660",
+      "etf_entries": [
+        {
+          "etf_name": "코스피플러스액티브",
+          "weight": "12.4%"
+        },
+        {
+          "etf_name": "K-이노베이션액티브",
+          "weight": "10.5%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "8.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "하우스 동반 매집 (2개 펀드)",
-      "actionGuide": "적극 분할 매수 (30%)",
-      "guideColor": "emerald",
-      "priority_score": 90,
-      "reason": "타임폴리오 TIME K컬처액티브 실제 편입 비중 8.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Microsoft Corp",
-      "etfs": [
-        "TIME 미국나스닥100액티브",
-        "TIME 미국S&P500액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.10%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "하우스 동반 매집 (2개 펀드)",
-      "actionGuide": "적극 분할 매수 (30%)",
-      "guideColor": "emerald",
-      "priority_score": 90,
-      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 8.10%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "한화에어로스페이스",
-      "etfs": [
-        "TIME K-이노베이션액티브",
-        "TIME 글로벌우주테크&방산액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "7.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "하우스 동반 매집 (2개 펀드)",
-      "actionGuide": "적극 분할 매수 (30%)",
-      "guideColor": "emerald",
-      "priority_score": 90,
-      "reason": "타임폴리오 TIME K-이노베이션액티브 실제 편입 비중 7.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "리가켐바이오",
-      "etfs": [
-        "TIME 코스닥액티브",
-        "TIME K바이오액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "6.80%",
-      "buy_date": "2026-10-07",
-      "strategy": "house_pick",
-      "strategyLabel": "하우스 동반 매집 (2개 펀드)",
-      "actionGuide": "적극 분할 매수 (30%)",
-      "guideColor": "emerald",
-      "priority_score": 90,
-      "reason": "타임폴리오 TIME 코스닥액티브 실제 편입 비중 6.80%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "메리츠금융지주",
-      "etfs": [
-        "TIME 코리아밸류업액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "9.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코리아밸류업액티브 실제 편입 비중 9.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Apple Inc",
-      "etfs": [
-        "TIME 미국나스닥100액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "8.70%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 8.70%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "신한지주",
-      "etfs": [
-        "TIME 코리아밸류업액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "8.10%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코리아밸류업액티브 실제 편입 비중 8.10%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "KB금융",
-      "etfs": [
-        "TIME 코리아밸류업액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "7.90%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코리아밸류업액티브 실제 편입 비중 7.90%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "에코프로비엠",
-      "etfs": [
-        "TIME 코스닥액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "7.40%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코스닥액티브 실제 편입 비중 7.40%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "현대차",
-      "etfs": [
-        "TIME 코스피플러스액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "5.80%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코스피플러스액티브 실제 편입 비중 5.80%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Broadcom Inc",
-      "etfs": [
-        "TIME 미국나스닥100액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "5.40%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 5.40%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Amazon.com Inc",
-      "etfs": [
-        "TIME 미국S&P500액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "5.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 미국S&P500액티브 실제 편입 비중 5.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "기아",
-      "etfs": [
-        "TIME 코스피플러스액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "4.90%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코스피플러스액티브 실제 편입 비중 4.90%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "LG에너지솔루션",
-      "etfs": [
-        "TIME 코스피액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "4.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 코스피액티브 실제 편입 비중 4.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Bloom Energy",
-      "etfs": [
-        "TIME 미국나스닥100액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "4.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 미국나스닥100액티브 실제 편입 비중 4.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "Eli Lilly",
-      "etfs": [
-        "TIME 미국S&P500액티브"
-      ],
-      "is_single_conviction": true,
-      "current": "4.10%",
-      "buy_date": "2026-10-07",
-      "strategy": "single_conviction",
-      "strategyLabel": "지수형 단독 승부주",
-      "actionGuide": "단독 승부 (25%)",
-      "guideColor": "purple",
-      "priority_score": 85,
-      "reason": "타임폴리오 TIME 미국S&P500액티브 실제 편입 비중 4.10%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "HD현대일렉트릭",
-      "etfs": [
-        "TIME K신재생에너지액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "12.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K신재생에너지액티브 실제 편입 비중 12.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "하이브",
-      "etfs": [
-        "TIME K컬처액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "11.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K컬처액티브 실제 편입 비중 11.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "효성중공업",
-      "etfs": [
-        "TIME K신재생에너지액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "9.80%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K신재생에너지액티브 실제 편입 비중 9.80%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "현대로템",
-      "etfs": [
-        "TIME 글로벌우주테크&방산액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "9.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌우주테크&방산액티브 실제 편입 비중 9.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "에스엠",
-      "etfs": [
-        "TIME K컬처액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "9.20%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K컬처액티브 실제 편입 비중 9.20%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "이수페타시스",
-      "etfs": [
-        "TIME 글로벌소부장액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.90%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌소부장액티브 실제 편입 비중 8.90%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "TSMC",
-      "etfs": [
-        "TIME 글로벌AI인공지능액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.90%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌AI인공지능액티브 실제 편입 비중 8.90%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "LS ELECTRIC",
-      "etfs": [
-        "TIME K신재생에너지액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.60%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K신재생에너지액티브 실제 편입 비중 8.60%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "LVMH",
-      "etfs": [
-        "TIME 글로벌소비트렌드액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.50%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌소비트렌드액티브 실제 편입 비중 8.50%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
-    },
-    {
-      "name": "LIG넥스원",
-      "etfs": [
-        "TIME 글로벌우주테크&방산액티브"
-      ],
-      "is_single_conviction": false,
-      "current": "8.40%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌우주테크&방산액티브 실제 편입 비중 8.40%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME 코스피플러스액티브에 최초 신규 매수 포착."
     },
     {
       "name": "유한양행",
-      "etfs": [
-        "TIME K바이오액티브"
+      "ticker": "000100",
+      "etf_entries": [
+        {
+          "etf_name": "K바이오액티브",
+          "weight": "8.1%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "8.10%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME K바이오액티브 실제 편입 비중 8.10%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME K바이오액티브에 최초 신규 매수 포착."
     },
     {
-      "name": "테크윙",
-      "etfs": [
-        "TIME 글로벌소부장액티브"
+      "name": "삼성전자",
+      "ticker": "005930",
+      "etf_entries": [
+        {
+          "etf_name": "코스피플러스액티브",
+          "weight": "18.5%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "7.80%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌소부장액티브 실제 편입 비중 7.80%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME 코스피플러스액티브에 최초 신규 매수 포착."
     },
     {
-      "name": "Hermes",
-      "etfs": [
-        "TIME 글로벌소비트렌드액티브"
+      "name": "리가켐바이오",
+      "ticker": "141080",
+      "etf_entries": [
+        {
+          "etf_name": "코스닥액티브",
+          "weight": "6.8%"
+        }
       ],
-      "is_single_conviction": false,
-      "current": "7.80%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌소비트렌드액티브 실제 편입 비중 7.80%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "reason": "어제 장부에 없다가 오늘 TIME 코스닥액티브에 최초 신규 매수 포착."
+    }
+  ],
+  "core_holdings": [
+    {
+      "name": "삼성전자",
+      "ticker": "005930",
+      "etfs": [
+        "코리아밸류업액티브 6.5%",
+        "코스피액티브 20.3%",
+        "코스피플러스액티브 18.5%"
+      ],
+      "total_weight": 45.269999999999996,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 편입 종목."
     },
     {
-      "name": "한국항공우주",
+      "name": "SK하이닉스",
+      "ticker": "000660",
       "etfs": [
-        "TIME 글로벌우주테크&방산액티브"
+        "코스피액티브 21.4%",
+        "코스피플러스액티브 12.4%",
+        "K-이노베이션액티브 10.5%"
       ],
-      "is_single_conviction": false,
-      "current": "6.10%",
-      "buy_date": "2026-10-07",
-      "strategy": "normal",
-      "strategyLabel": "정규 편입",
-      "actionGuide": "포트폴리오 유지 (Hold)",
-      "guideColor": "slate",
-      "priority_score": 20,
-      "reason": "타임폴리오 TIME 글로벌우주테크&방산액티브 실제 편입 비중 6.10%.",
-      "tele_mention": "텔레그램 핵심 테마",
-      "target_flow": "수급 집중 유입"
+      "total_weight": 44.35,
+      "reason": "타임폴리오 TIME 코스피액티브 편입 종목."
+    },
+    {
+      "name": "알테오젠",
+      "ticker": "196170",
+      "etfs": [
+        "K-이노베이션액티브 8.7%",
+        "코스닥액티브 11.2%",
+        "K바이오액티브 14.8%"
+      ],
+      "total_weight": 34.7,
+      "reason": "타임폴리오 TIME K-이노베이션액티브 편입 종목."
+    },
+    {
+      "name": "NVIDIA Corp",
+      "ticker": "NVDA",
+      "etfs": [
+        "미국나스닥100액티브 9.8%",
+        "글로벌AI인공지능액티브 14.5%"
+      ],
+      "total_weight": 24.35,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 편입 종목."
+    },
+    {
+      "name": "Synopsys Inc",
+      "ticker": "SNPS",
+      "etfs": [
+        "미국나스닥100액티브 2.1%",
+        "글로벌AI인공지능액티브 1.8%"
+      ],
+      "total_weight": 3.9000000000000004,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 편입 종목."
+    },
+    {
+      "name": "코스맥스",
+      "ticker": "192820",
+      "etfs": [
+        "K컬처액티브 2.0%",
+        "코리아밸류업액티브 0.2%"
+      ],
+      "total_weight": 2.2,
+      "reason": "타임폴리오 TIME K컬처액티브 편입 종목."
+    },
+    {
+      "name": "하이브",
+      "ticker": "352820",
+      "etfs": [
+        "K컬처액티브 11.5%"
+      ],
+      "total_weight": 11.5,
+      "reason": "타임폴리오 TIME K컬처액티브 편입 종목."
+    },
+    {
+      "name": "에스엠",
+      "ticker": "041510",
+      "etfs": [
+        "K컬처액티브 9.2%"
+      ],
+      "total_weight": 9.2,
+      "reason": "타임폴리오 TIME K컬처액티브 편입 종목."
+    },
+    {
+      "name": "메리츠금융지주",
+      "ticker": "138040",
+      "etfs": [
+        "코리아밸류업액티브 9.2%"
+      ],
+      "total_weight": 9.2,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 편입 종목."
+    },
+    {
+      "name": "Apple Inc",
+      "ticker": "AAPL",
+      "etfs": [
+        "미국나스닥100액티브 8.7%"
+      ],
+      "total_weight": 8.7,
+      "reason": "타임폴리오 TIME 미국나스닥100액티브 편입 종목."
+    },
+    {
+      "name": "삼양식품",
+      "ticker": "003230",
+      "etfs": [
+        "K컬처액티브 8.5%"
+      ],
+      "total_weight": 8.5,
+      "reason": "타임폴리오 TIME K컬처액티브 편입 종목."
+    },
+    {
+      "name": "신한지주",
+      "ticker": "055550",
+      "etfs": [
+        "코리아밸류업액티브 8.1%"
+      ],
+      "total_weight": 8.1,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 편입 종목."
+    },
+    {
+      "name": "유한양행",
+      "ticker": "000100",
+      "etfs": [
+        "K바이오액티브 8.1%"
+      ],
+      "total_weight": 8.1,
+      "reason": "타임폴리오 TIME K바이오액티브 편입 종목."
+    },
+    {
+      "name": "KB금융",
+      "ticker": "105560",
+      "etfs": [
+        "코리아밸류업액티브 7.9%"
+      ],
+      "total_weight": 7.9,
+      "reason": "타임폴리오 TIME 코리아밸류업액티브 편입 종목."
+    },
+    {
+      "name": "SK스퀘어",
+      "ticker": "402340",
+      "etfs": [
+        "코스피액티브 7.6%"
+      ],
+      "total_weight": 7.64,
+      "reason": "타임폴리오 TIME 코스피액티브 편입 종목."
+    },
+    {
+      "name": "리가켐바이오",
+      "ticker": "141080",
+      "etfs": [
+        "코스닥액티브 6.8%"
+      ],
+      "total_weight": 6.8,
+      "reason": "타임폴리오 TIME 코스닥액티브 편입 종목."
     }
   ]
 }
