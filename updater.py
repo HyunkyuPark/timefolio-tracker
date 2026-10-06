@@ -3,77 +3,60 @@ import os
 import time
 import requests
 from datetime import datetime, timezone, timedelta
-from pykrx import stock
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 KST = timezone(timedelta(hours=9))
 
-# 타임폴리오 14개 주식형 액티브 ETF 전 라인업
+# 원래 성공적으로 잘 불러와졌던 검증된 10개 핵심 ETF 라인업
 ETF_REGISTRY = {
-    # 1. 국내 대표 지수 & 밸류업
+    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
+    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
     "385550": {"name": "TIME 코스피플러스액티브", "is_broad": True},
     "400580": {"name": "TIME 코스피액티브", "is_broad": True},
-    "400570": {"name": "TIME 코스닥액티브", "is_broad": True},
     "495060": {"name": "TIME 코리아밸류업액티브", "is_broad": True},
-
-    # 2. 국내 특화 섹터/테마
     "404120": {"name": "TIME K신재생에너지액티브", "is_broad": False},
     "449180": {"name": "TIME K바이오액티브", "is_broad": False},
     "449190": {"name": "TIME K-이노베이션액티브", "is_broad": False},
     "432320": {"name": "TIME K컬처액티브", "is_broad": False},
-    "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False},
-
-    # 3. 미국/글로벌 대표 테마
-    "433540": {"name": "TIME 미국나스닥100액티브", "is_broad": True},
-    "449170": {"name": "TIME 미국S&P500액티브", "is_broad": True},
-    "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False},
-    "478150": {"name": "TIME 글로벌우주테크&방산액티브", "is_broad": False},
-    "494180": {"name": "TIME 글로벌소비트렌드액티브", "is_broad": False}
+    "465600": {"name": "TIME 글로벌AI인공지능액티브", "is_broad": False}
 }
 
-def fetch_etf_holdings_pykrx(code):
-    """
-    한국거래소(KRX) 공식 PDF(납입자산구성내역) 직통 조회 (해외 IP 차단 없음)
-    """
+SESSION = requests.Session()
+SESSION.headers.update({
+    "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1",
+    "Referer": "https://m.stock.naver.com/",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "ko-KR,ko;q=0.9"
+})
+
+def fetch_etf_holdings(code):
+    url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
     items = {}
     try:
-        df = stock.get_etf_portfolio_deposit_file(code)
-        if df is not None and not df.empty:
-            # 총 평가금액 산출
-            total_amt = 0.0
-            if "금액" in df.columns:
-                total_amt = df["금액"].sum()
-            elif "평가금액" in df.columns:
-                total_amt = df["평가금액"].sum()
-
-            for name, row in df.iterrows():
-                nm = str(name).strip()
-                if not nm or "원화" in nm or "현금" in nm or "예금" in nm or "단기" in nm:
+        res = SESSION.get(url, timeout=5)
+        if res.status_code == 200:
+            data = res.json().get("result", {}).get("portfolio", [])
+            for r in data:
+                nm = (r.get("itemName") or r.get("stockName") or "").strip()
+                if not nm or "원화" in nm or "현금" in nm or "예금" in nm:
                     continue
+                try:
+                    wt = float(str(r.get("weight", 0)).replace("%", "").replace(",", ""))
+                except Exception:
+                    wt = 0.0
+                try:
+                    sh = float(str(r.get("share", 0) or r.get("quantity", 0)).replace(",", ""))
+                except Exception:
+                    sh = 0.0
+                try:
+                    pr = float(str(r.get("price", 0) or r.get("closePrice", 0)).replace(",", ""))
+                except Exception:
+                    pr = 0.0
 
-                # 비중 계산
-                wt = 0.0
-                if "비중" in row:
-                    wt = float(row["비중"])
-                elif total_amt > 0:
-                    val = float(row.get("금액", 0) or row.get("평가금액", 0))
-                    wt = round((val / total_amt) * 100, 2)
-
-                sh = float(row.get("수량", 0) or row.get("계약수", 1000))
-                pr = float(row.get("종가", 0) or row.get("가격", 10000))
-
-                if wt > 0.05 or sh > 0:
-                    items[nm] = {
-                        "name": nm,
-                        "weight": wt if wt > 0 else 1.0,
-                        "shares": sh,
-                        "price": pr
-                    }
-            if items:
-                return items
+                if wt > 0.05:
+                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
     except Exception as e:
-        print(f"[{code}] pykrx 조회 로그: {e}")
-
+        print(f"[{code}] 조회 오류: {e}")
     return items
 
 def query_gemini_thesis(top_stocks):
@@ -83,7 +66,7 @@ def query_gemini_thesis(top_stocks):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
     summary = [f"- {s['name']} (편입: {','.join(s['etfs'])}, 비중: {s['current']})" for s in top_stocks]
     prompt = f"""
-    너는 타임폴리오 액티브 헤지펀드 시니어 주식 리서치 애널리스트다.
+    너는 타임폴리오 액티브 헤지펀드 시니어 리서치 애널리스트다.
     오늘 실제 ETF 장부에서 집중 편입된 핵심 종목들이다:
     {chr(10).join(summary)}
 
@@ -113,7 +96,7 @@ def main():
     now_kst = datetime.now(KST)
     now_time_str = now_kst.strftime("%Y-%m-%d %H:%M 기준")
     today_str = now_kst.strftime("%Y-%m-%d")
-    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 실데이터 수집 시작 (KRX Direct Engine)...")
+    print(f"[{now_time_str}] 검증된 10개 핵심 ETF 실데이터 수집 시작...")
 
     history_file = "history.json"
     history = {}
@@ -132,10 +115,10 @@ def main():
     success_count = 0
 
     for code, meta in ETF_REGISTRY.items():
-        items = fetch_etf_holdings_pykrx(code)
+        items = fetch_etf_holdings(code)
         if items:
             success_count += 1
-            print(f"✅ [{meta['name']}] 종목 {len(items)}개 수집 성공")
+            print(f"✅ [{meta['name']}] {len(items)}개 종목 수집 성공")
             current_snapshot[code] = {
                 "name": meta["name"],
                 "is_broad": meta["is_broad"],
@@ -146,14 +129,14 @@ def main():
                     stock_to_etfs[s_name] = []
                 stock_to_etfs[s_name].append(meta["name"])
         else:
-            print(f"⚠️ [{meta['name']}] 응답 대기/스킵")
-        time.sleep(0.3)
+            print(f"❌ [{meta['name']}] 수집 대기")
+        time.sleep(0.4)
 
-    print(f"📊 최종 수집 결과: 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
+    print(f"📊 최종 수집 결과: 10개 중 {success_count}개 펀드 실제 장부 추출 완료!")
 
-    # 수집 실패 시 기존 data.json 보존
+    # 만약 수집이 일시적으로 실패했다면 빈 파일(0개)로 덮어쓰지 않고 기존 데이터 유지
     if success_count == 0:
-        print("❌ 수집 실패로 덮어쓰지 않고 종료합니다.")
+        print("⚠️ 수집 결과가 0개이므로 기존 정상 파일을 보존하고 종료합니다.")
         return
 
     all_analyzed = []
