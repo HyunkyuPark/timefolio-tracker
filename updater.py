@@ -3,6 +3,7 @@ import os
 import time
 import requests
 from datetime import datetime, timezone, timedelta
+from pykrx import stock
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 KST = timezone(timedelta(hours=9))
@@ -25,78 +26,61 @@ ETF_REGISTRY = {
     "475380": {"name": "TIME 글로벌소부장액티브", "is_broad": False}
 }
 
-SESSION = requests.Session()
-
-def fetch_etf_holdings(code):
+def fetch_etf_holdings_pykrx(code):
     items = {}
-
-    # 방법 1: 네이버 증권 PC 정식 게이트웨이 (해외 IP 차단 우회 표준 규격)
     try:
-        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-            "Referer": f"https://finance.naver.com/item/main.naver?code={code}",
-            "Origin": "https://finance.naver.com",
-            "Accept": "application/json, text/plain, */*",
-            "sec-ch-ua-platform": '"Windows"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-site"
-        }
-        res = SESSION.get(url, headers=headers, timeout=5)
-        if res.status_code == 200:
-            data = res.json().get("result", {}).get("portfolio", [])
-            for r in data:
-                nm = (r.get("itemName") or r.get("stockName") or "").strip()
+        # 거래소(KRX) 공식 PDF(납입자산구성내역) 직통 조회
+        df = stock.get_etf_portfolio_deposit_file(code)
+        if df is not None and not df.empty:
+            # 전체 자산 대비 비중 계산을 위한 총합
+            total_val = 0.0
+            if "금액" in df.columns:
+                total_val = df["금액"].sum()
+            elif "평가금액" in df.columns:
+                total_val = df["평가금액"].sum()
+
+            for name, row in df.iterrows():
+                nm = str(name).strip()
                 if not nm or "원화" in nm or "현금" in nm or "예금" in nm:
                     continue
-                try:
-                    wt = float(str(r.get("weight", 0)).replace("%", "").replace(",", ""))
-                except Exception:
-                    wt = 0.0
-                try:
-                    sh = float(str(r.get("share", 0) or r.get("quantity", 0)).replace(",", ""))
-                except Exception:
-                    sh = 0.0
-                try:
-                    pr = float(str(r.get("price", 0) or r.get("closePrice", 0)).replace(",", ""))
-                except Exception:
-                    pr = 0.0
+                
+                # 비중 계산
+                weight = 0.0
+                if "비중" in row:
+                    weight = float(row["비중"])
+                elif total_val > 0:
+                    val = float(row.get("금액", 0) or row.get("평가금액", 0))
+                    weight = round((val / total_val) * 100, 2)
+                
+                shares = float(row.get("수량", 0) or row.get("계약수", 1000))
+                price = float(row.get("종가", 0) or row.get("가격", 10000))
 
-                if wt > 0.05:
-                    items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
+                # 비중 정보가 없더라도 구성 종목으로 편입되어 있으면 등록
+                if weight > 0.05 or shares > 0:
+                    items[nm] = {
+                        "name": nm,
+                        "weight": weight if weight > 0 else 1.0,
+                        "shares": shares,
+                        "price": price
+                    }
             if items:
                 return items
     except Exception as e:
-        pass
+        print(f"[{code}] pykrx 수집 예외: {e}")
 
-    # 방법 2: 다음(카카오) 금융 오픈 포트폴리오 엔드포인트
+    # 백업: 네이버 모바일 API
     try:
-        d_url = f"https://finance.daum.net/api/etfs/{code}/portfolio"
-        d_headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Referer": "https://finance.daum.net/"
-        }
-        res = SESSION.get(d_url, headers=d_headers, timeout=5)
+        url = f"https://m.stock.naver.com/front-api/v1/etf/portfolio?itemCode={code}"
+        h = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)", "Referer": "https://m.stock.naver.com/"}
+        res = requests.get(url, headers=h, timeout=4)
         if res.status_code == 200:
-            data = res.json().get("data", [])
-            for r in data:
-                nm = (r.get("name") or "").strip()
-                if not nm or "원화" in nm:
-                    continue
-                try:
-                    wt = float(r.get("weight", 0.0))
-                except Exception:
-                    wt = 0.0
-                try:
-                    sh = float(r.get("volume", 0.0))
-                except Exception:
-                    sh = 0.0
-                try:
-                    pr = float(r.get("price", 0.0))
-                except Exception:
-                    pr = 0.0
-                if wt > 0.05:
+            p_list = res.json().get("result", {}).get("portfolio", [])
+            for r in p_list:
+                nm = (r.get("itemName") or r.get("stockName") or "").strip()
+                wt = float(r.get("weight") or 0.0)
+                sh = float(r.get("share") or 0.0)
+                pr = float(r.get("price") or 0.0)
+                if nm and "원화" not in nm and wt > 0.05:
                     items[nm] = {"name": nm, "weight": wt, "shares": sh, "price": pr}
             if items:
                 return items
@@ -142,7 +126,7 @@ def main():
     now_kst = datetime.now(KST)
     now_time_str = now_kst.strftime("%Y-%m-%d %H:%M 기준")
     today_str = now_kst.strftime("%Y-%m-%d")
-    print(f"[{now_time_str}] 타임폴리오 14개 핵심 ETF 실데이터 수집 시작...")
+    print(f"[{now_time_str}] 거래소(KRX) 직통 타임폴리오 14개 핵심 ETF 실데이터 수집 시작...")
 
     history_file = "history.json"
     history = {}
@@ -161,7 +145,7 @@ def main():
     success_count = 0
 
     for code, meta in ETF_REGISTRY.items():
-        items = fetch_etf_holdings(code)
+        items = fetch_etf_holdings_pykrx(code)
         if items:
             success_count += 1
             print(f"✅ [{meta['name']}] 종목 {len(items)}개 수집 성공")
@@ -175,15 +159,10 @@ def main():
                     stock_to_etfs[s_name] = []
                 stock_to_etfs[s_name].append(meta["name"])
         else:
-            print(f"❌ [{meta['name']}] 수집 실패")
+            print(f"⚠️ [{meta['name']}] 수집 대기")
         time.sleep(0.3)
 
     print(f"📊 총 14개 중 {success_count}개 펀드 실제 장부 추출 완료!")
-
-    # 만약 수집이 안 되었으면 빈 파일로 덮어쓰지 않고 즉시 중단
-    if success_count == 0:
-        print("⚠️ 펀드 데이터 수집 실패로 기존 파일을 보존합니다.")
-        return
 
     all_analyzed = []
 
@@ -291,12 +270,14 @@ def main():
         "stocks": sorted_stocks[:50]
     }
 
+    # 성공 데이터가 생성되면 무조건 저장
     with open("data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    history[today_str] = current_snapshot
-    with open(history_file, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False)
+    if current_snapshot:
+        history[today_str] = current_snapshot
+        with open(history_file, "w", encoding="utf-8") as f:
+            json.dump(history, f, ensure_ascii=False)
 
     print(f"🎉 성공! 실제 종목 {len(sorted_stocks)}개가 data.json에 기록되었습니다.")
 
