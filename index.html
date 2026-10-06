@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>타임폴리오 ETF & 텔레그램 인텔리전스 레이더</title>
+  <!-- Tailwind CSS & Lucide Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- 마크다운 렌더러 -->
+  <!-- Markdown Parser for Gemini Pro Modal -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -40,7 +41,7 @@
         <button onclick="openApiKeyModal()" title="Gemini API Key 설정" class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-amber-400 transition active:scale-95">
           <i data-lucide="key" class="w-4 h-4"></i>
         </button>
-        <button onclick="loadRadarData()" class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition active:scale-95">
+        <button onclick="loadRadarData()" title="새로고침" class="p-2 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition active:scale-95">
           <i data-lucide="refresh-cw" class="w-4 h-4"></i>
         </button>
       </div>
@@ -70,11 +71,13 @@
       <div class="flex items-center justify-between">
         <h2 class="text-xs font-bold text-white flex items-center gap-1.5 tracking-tight">
           <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
-          운용역 텔레그램 포커스 $\rightarrow$ 실제 장부 매집 인과 흐름
+          운용역 텔레그램 포커스 &rarr; 실제 장부 매집 인과 흐름
         </h2>
         <span class="text-[10px] text-blue-400 font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">Flash 자동 스캔</span>
       </div>
-      <div id="briefingList" class="space-y-2.5"></div>
+      <div id="briefingList" class="space-y-2.5">
+        <div class="text-xs text-slate-500 py-2">텔레그램 인텔리전스 요약을 불러오는 중...</div>
+      </div>
     </div>
 
     <!-- 필터 탭 -->
@@ -92,7 +95,7 @@
 
   </main>
 
-  <!-- 🌟 Gemini Pro 심층 리서치 모달 (팝업창) -->
+  <!-- Gemini Pro 심층 리서치 모달 (팝업창) -->
   <div id="proModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="glass-card bg-slate-900 border border-slate-700 w-full max-w-2xl max-h-[85vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl">
       <!-- 모달 헤더 -->
@@ -108,19 +111,19 @@
 
       <!-- 모달 본문 (심층 보고서 내용) -->
       <div id="modalContent" class="p-5 overflow-y-auto space-y-4 prose-dark">
-        <!-- 로딩 or 결과 표시 -->
+        <!-- 로딩 또는 결과 표시 -->
       </div>
     </div>
   </div>
 
-  <!-- 🔑 API 키 입력 모달 -->
+  <!-- API 키 입력 모달 -->
   <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="glass-card bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl p-5 space-y-4 shadow-2xl">
       <h3 class="text-base font-bold text-white flex items-center gap-2">
         <i data-lucide="key" class="w-4 h-4 text-amber-400"></i> Gemini API Key 설정
       </h3>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Gemini Pro 심층 리서치는 고사양 추론 모델을 사용합니다. Google AI Studio에서 발급받은 개인 API Key를 입력하시면 브라우저에만 안전하게 저장됩니다.
+        Gemini Pro 심층 리서치는 고사양 추론 모델을 사용합니다. Google AI Studio에서 무료로 발급받은 개인 API Key를 입력하시면 브라우저 로컬 스토리지에 안전하게 저장됩니다.
       </p>
       <input type="password" id="userApiKeyInput" placeholder="AIzaSy..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500" />
       <div class="flex justify-end gap-2">
@@ -140,14 +143,17 @@
       const updatedEl = document.getElementById('lastUpdated');
 
       try {
-        const res = await fetch('data.json?t=' + new Date().getTime());
+        // 캐시 무효화(?v=현재밀리초)와 no-store 헤더로 항상 서버 최신본 호출
+        const res = await fetch(`data.json?v=${new Date().getTime()}`, {
+          cache: 'no-store'
+        });
         if (!res.ok) throw new Error("데이터 로드 실패");
         const data = await res.json();
 
         updatedEl.textContent = data.last_updated || '최신 업데이트 완료';
         allStocks = data.stocks || [];
 
-        // 텔레그램 인텔리전스 브리핑 보드
+        // 텔레그램 인텔리전스 브리핑 보드 렌더링
         const briefings = data.briefings || [];
         if (briefings.length > 0) {
           briefingEl.innerHTML = briefings.map(b => `
@@ -211,7 +217,7 @@
         return true;
       });
 
-      listEl.innerHTML = filtered.map((s, idx) => {
+      listEl.innerHTML = filtered.map(s => {
         const etfCount = s.etfs ? s.etfs.length : 1;
         const etfBadges = (s.etfs || []).map(e => `
           <span class="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/60 font-medium">
@@ -224,7 +230,6 @@
         else if (etfCount === 2) badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
         else if (s.is_single_conviction) badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
 
-        // JSON 직렬화 안전 처리
         const safeStockStr = encodeURIComponent(JSON.stringify(s));
 
         return `
@@ -286,7 +291,7 @@
               </div>
             </div>
 
-            <!-- ✨ [Gemini Pro 심층 리포트 생성 버튼] -->
+            <!-- Gemini Pro 심층 리포트 생성 버튼 -->
             <button onclick="requestProDeepDive('${safeStockStr}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-900/60 to-purple-900/60 hover:from-indigo-800/80 hover:to-purple-800/80 border border-indigo-500/30 text-indigo-200 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-[0.98] shadow-lg shadow-indigo-950/40">
               <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-400"></i>
               Gemini Pro 심층 리서치 메모 보기 (근거·수급·목표비중)
@@ -298,7 +303,7 @@
       lucide.createIcons();
     }
 
-    // 🌟 Gemini Pro 실시간 심층 리서치 호출 함수
+    // Gemini Pro 실시간 심층 리서치 호출 함수
     async function requestProDeepDive(encodedStock) {
       const stock = JSON.parse(decodeURIComponent(encodedStock));
       const modal = document.getElementById('proModal');
@@ -308,7 +313,6 @@
       titleEl.textContent = `${stock.name} — 타임폴리오 운용역 심층 리서치 메모`;
       modal.classList.remove('hidden');
 
-      // 로딩 화면
       contentEl.innerHTML = `
         <div class="py-12 flex flex-col items-center justify-center text-center space-y-3">
           <div class="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
@@ -407,9 +411,22 @@
       closeApiKeyModal();
     }
 
+    // 1. 페이지 로드 시 즉시 데이터 호출
     window.addEventListener('DOMContentLoaded', () => {
       loadRadarData();
     });
+
+    // 2. 스마트폰 잠금 해제 또는 브라우저 탭으로 복귀 시 자동 재호출
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        loadRadarData();
+      }
+    });
+
+    // 3. 브라우저를 켜둔 상태에서도 5분마다 자동 갱신
+    setInterval(() => {
+      loadRadarData();
+    }, 5 * 60 * 1000);
   </script>
 </body>
 </html>
